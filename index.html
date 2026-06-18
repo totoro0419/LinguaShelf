@@ -1,0 +1,4265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f8f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111414" media="(prefers-color-scheme: dark)">
+  <meta name="application-name" content="English Reading Shelf">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Reading Shelf">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>英文多読アプリ</title>
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("englishReadingShelf.theme") || "light";
+        const opening = localStorage.getItem("englishReadingShelf.openingAnimation") || "on";
+        const reduceMotion = window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
+        document.documentElement.dataset.opening = opening === "off" || reduceMotion ? "off" : "on";
+      } catch (error) {
+        document.documentElement.dataset.theme = "light";
+        document.documentElement.dataset.opening = "on";
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --primary: #ffd54a;
+      --primary-dark: #c89b00;
+      --ink: #1f2933;
+      --muted: #65717c;
+      --line: #e6e2d8;
+      --paper: #fffdf7;
+      --surface: #ffffff;
+      --soft: #f7f2df;
+      --accent: #2f6f73;
+      --danger: #a43f3f;
+      --button-text: #231f12;
+      --secondary-bg: #ffffff;
+      --danger-bg: #fff1ee;
+      --danger-border: #f1c6be;
+      --field-bg: #ffffff;
+      --header-bg: rgba(255, 253, 247, 0.94);
+      --brand-text: #1e1600;
+      --tab-bg: #ffffff;
+      --card-bg: #ffffff;
+      --pill-text: #514729;
+      --empty-border: #d8ceb5;
+      --empty-bg: #fffaf0;
+      --reader-word: #18212b;
+      --word-underline: rgba(47, 111, 115, 0.35);
+      --word-hover-bg: #fff1a8;
+      --overlay-bg: rgba(31, 41, 51, 0.38);
+      --dict-header-bg: #fffdf7;
+      --section-heading: #3c3421;
+      --note-bg: #f0f7f7;
+      --note-text: #264f52;
+      --focus-ring: rgba(47, 111, 115, 0.35);
+      --shadow: 0 12px 28px rgba(31, 41, 51, 0.12);
+      --subtle-shadow: 0 6px 16px rgba(31, 41, 51, 0.05);
+      --radius: 8px;
+      --content-max: 1180px;
+      --reader-max: 900px;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --primary: #ffd54a;
+      --primary-dark: #d4a80b;
+      --ink: #f3f5f8;
+      --muted: #a8b2bd;
+      --line: #343b48;
+      --paper: #101217;
+      --surface: #191e27;
+      --soft: #282315;
+      --accent: #7fc8cd;
+      --danger: #ff9288;
+      --button-text: #211900;
+      --secondary-bg: #202633;
+      --danger-bg: #3a2020;
+      --danger-border: #7b3b38;
+      --field-bg: #141922;
+      --header-bg: rgba(16, 18, 23, 0.94);
+      --brand-text: #211900;
+      --tab-bg: #202633;
+      --card-bg: #191e27;
+      --pill-text: #f2dc86;
+      --empty-border: #514a33;
+      --empty-bg: #1d1b14;
+      --reader-word: #f4f7fb;
+      --word-underline: rgba(127, 200, 205, 0.5);
+      --word-hover-bg: #4b3d08;
+      --overlay-bg: rgba(0, 0, 0, 0.58);
+      --dict-header-bg: #171b23;
+      --section-heading: #f1dea0;
+      --note-bg: #15282b;
+      --note-text: #bde5e8;
+      --focus-ring: rgba(127, 200, 205, 0.45);
+      --shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+      --subtle-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--paper);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      background: var(--primary);
+      color: var(--button-text);
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    button.secondary {
+      background: var(--secondary-bg);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    button.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--ink);
+    }
+
+    button.danger {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger);
+    }
+
+    button.icon {
+      width: 44px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: var(--field-bg);
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    small,
+    .muted {
+      color: var(--muted);
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .header-inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 14px 16px 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: var(--brand-text);
+      font-weight: 900;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .tab-button {
+      min-height: 42px;
+      padding: 9px 8px;
+      background: var(--tab-bg);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .tab-button[aria-selected="true"] {
+      background: var(--primary);
+      border-color: var(--primary-dark);
+    }
+
+    main {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 18px 16px 36px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .section-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: clamp(14px, 2vw, 18px);
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .panel h2,
+    .panel h3 {
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+
+    .panel h2 {
+      font-size: 19px;
+    }
+
+    .panel h3 {
+      font-size: 17px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .word-range {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .sort-controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      width: min(100%, 380px);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .status.error {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .results,
+    .shelf-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-card,
+    .article-card {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .card-topline {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .meta-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--pill-text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .memo-editor {
+      display: grid;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--empty-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: var(--empty-bg);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .reader-shell {
+      display: grid;
+      gap: 14px;
+      max-width: var(--reader-max);
+      margin: 0 auto;
+    }
+
+    .reader-toolbar {
+      display: grid;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .reader-title {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .reader-text {
+      min-height: 58dvh;
+      max-height: calc(100vh - 220px);
+      overflow: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      font-size: 18px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .analysis-panel {
+      display: grid;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .analysis-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .analysis-header h3 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.3;
+    }
+
+    .analysis-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .analysis-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--soft) 70%, var(--surface));
+    }
+
+    .legend-chip {
+      --chip-color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--chip-color) 45%, var(--line));
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: color-mix(in srgb, var(--chip-color) 10%, var(--surface));
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .legend-chip[data-kind="subject"] {
+      --chip-color: #d4832f;
+    }
+
+    .legend-chip[data-kind="verb"] {
+      --chip-color: #c7902f;
+    }
+
+    .legend-chip[data-kind="object"] {
+      --chip-color: #2f7bbd;
+    }
+
+    .legend-chip[data-kind="complement"] {
+      --chip-color: #55984b;
+    }
+
+    .legend-chip[data-kind="adverbial"] {
+      --chip-color: #9b2f61;
+    }
+
+    .analysis-card {
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--card-bg);
+    }
+
+    .analysis-sentence {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .analysis-translation {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .analysis-pattern {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .pattern-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: var(--soft);
+      color: var(--ink);
+    }
+
+    .structure-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .structure-chip {
+      --chip-color: var(--accent);
+      position: relative;
+      display: grid;
+      gap: 6px;
+      min-width: 112px;
+      max-width: 100%;
+      border: 1px solid color-mix(in srgb, var(--chip-color) 56%, var(--line));
+      border-top-width: 4px;
+      border-radius: var(--radius);
+      padding: 10px;
+      background: color-mix(in srgb, var(--chip-color) 8%, var(--surface));
+    }
+
+    .structure-chip[data-kind="subject"] {
+      --chip-color: #d4832f;
+    }
+
+    .structure-chip[data-kind="verb"] {
+      --chip-color: #c7902f;
+    }
+
+    .structure-chip[data-kind="object"],
+    .structure-chip[data-kind="noun"] {
+      --chip-color: #2f7bbd;
+    }
+
+    .structure-chip[data-kind="complement"],
+    .structure-chip[data-kind="adjective"] {
+      --chip-color: #55984b;
+    }
+
+    .structure-chip[data-kind="adverbial"],
+    .structure-chip[data-kind="modifier"] {
+      --chip-color: #9b2f61;
+    }
+
+    .structure-text {
+      color: var(--ink);
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .structure-label {
+      color: var(--chip-color);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .analysis-notes {
+      margin: 0;
+      padding-left: 1.2em;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .word {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0 1px;
+      color: var(--reader-word);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: var(--word-underline);
+      text-underline-offset: 3px;
+    }
+
+    .word:hover,
+    .word:focus {
+      background: var(--word-hover-bg);
+      outline: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: var(--overlay-bg);
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .dict-panel {
+      width: min(760px, calc(100vw - 28px));
+      max-height: min(760px, 92dvh);
+      overflow: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .dict-header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      background: var(--dict-header-bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dict-header h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .dict-body {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .dict-section {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card-bg);
+    }
+
+    .dict-section h3 {
+      margin: 0;
+      font-size: 15px;
+      color: var(--section-heading);
+    }
+
+    .dict-value {
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .sentence-pair {
+      display: grid;
+      gap: 12px;
+    }
+
+    .sentence-pane {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .sentence-pane h4 {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dict-list {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.6;
+    }
+
+    .settings-note {
+      margin: 0;
+      padding: 12px;
+      border-radius: var(--radius);
+      background: var(--note-bg);
+      color: var(--note-text);
+      line-height: 1.6;
+    }
+
+    .settings-block {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .settings-block h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .two-column {
+      display: grid;
+      gap: 16px;
+    }
+
+    .startup-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        linear-gradient(180deg, var(--paper), var(--surface));
+      color: var(--ink);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 360ms ease, visibility 360ms ease;
+    }
+
+    html[data-opening="off"] .startup-splash,
+    .startup-splash[hidden] {
+      display: none;
+    }
+
+    .startup-splash.is-hiding {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .startup-content {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+      transform: translateY(0);
+      animation: startupRise 900ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+    }
+
+    .startup-book {
+      width: clamp(88px, 18vw, 118px);
+      aspect-ratio: 1.25 / 1;
+      position: relative;
+      perspective: 620px;
+      filter: drop-shadow(0 18px 24px rgba(31, 41, 51, 0.14));
+    }
+
+    .startup-book::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 4%;
+      width: 5px;
+      height: 88%;
+      border-radius: 999px;
+      background: var(--ink);
+      transform: translateX(-50%);
+      opacity: 0.9;
+    }
+
+    .startup-page {
+      position: absolute;
+      top: 5%;
+      bottom: 4%;
+      width: 48%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .startup-page.left {
+      left: 2%;
+      border-radius: var(--radius) 2px 2px var(--radius);
+      transform-origin: right center;
+      animation: pageLeft 1200ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+    }
+
+    .startup-page.right {
+      right: 2%;
+      border-radius: 2px var(--radius) var(--radius) 2px;
+      transform-origin: left center;
+      animation: pageRight 1200ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+    }
+
+    .startup-page::before,
+    .startup-page::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      opacity: 0.8;
+    }
+
+    .startup-page::before {
+      top: 34%;
+    }
+
+    .startup-page::after {
+      top: 54%;
+      right: 30%;
+    }
+
+    .startup-mark {
+      position: absolute;
+      inset: 32% 34%;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: var(--button-text);
+      font-weight: 900;
+      font-size: clamp(17px, 3.4vw, 23px);
+      line-height: 1;
+      animation: markPop 820ms 360ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+    }
+
+    .startup-title {
+      margin: 0;
+      font-size: clamp(22px, 4.4vw, 36px);
+      font-weight: 900;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .startup-subtitle {
+      margin: -6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .startup-line {
+      width: min(160px, 42vw);
+      height: 4px;
+      border-radius: 999px;
+      background: var(--primary);
+      transform-origin: left center;
+      animation: startupLine 1180ms 180ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+    }
+
+    @keyframes startupRise {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes pageLeft {
+      from {
+        transform: rotateY(42deg);
+      }
+      to {
+        transform: rotateY(0deg);
+      }
+    }
+
+    @keyframes pageRight {
+      from {
+        transform: rotateY(-42deg);
+      }
+      to {
+        transform: rotateY(0deg);
+      }
+    }
+
+    @keyframes markPop {
+      from {
+        opacity: 0;
+        transform: scale(0.86);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes startupLine {
+      from {
+        opacity: 0;
+        transform: scaleX(0.18);
+      }
+      to {
+        opacity: 1;
+        transform: scaleX(1);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .startup-splash {
+        display: none;
+      }
+
+      .startup-content,
+      .startup-page.left,
+      .startup-page.right,
+      .startup-mark,
+      .startup-line {
+        animation: none;
+      }
+    }
+
+    @media (min-width: 760px) {
+      .header-inner {
+        max-width: var(--content-max);
+        grid-template-columns: minmax(260px, 1fr) minmax(420px, 520px);
+        align-items: center;
+      }
+
+      .tabs {
+        align-self: center;
+      }
+
+      .form-row {
+        grid-template-columns: minmax(0, 1fr) 230px;
+        align-items: end;
+      }
+
+      .two-column {
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.8fr);
+        align-items: start;
+      }
+
+      .two-column > .panel:last-child {
+        position: sticky;
+        top: 116px;
+      }
+
+      .results,
+      .shelf-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .result-card,
+      .article-card {
+        min-height: 158px;
+      }
+
+      .reader-toolbar {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        align-items: center;
+      }
+
+      .reader-text {
+        font-size: 19px;
+        line-height: 1.9;
+        padding: 28px 32px;
+      }
+
+      .dict-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .dict-body > .button-row,
+      .dict-section[aria-labelledby="definitionHeading"],
+      .dict-section[aria-labelledby="jaHeading"],
+      .dict-section[aria-labelledby="exampleHeading"],
+      .dict-section[aria-labelledby="aiExtensionsHeading"],
+      .dict-section[aria-labelledby="sentencePairHeading"] {
+        grid-column: 1 / -1;
+      }
+
+      .sentence-pair {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      main {
+        padding: 12px 10px 28px;
+      }
+
+      .header-inner {
+        padding-inline: 12px;
+        gap: 8px;
+      }
+
+      .brand-row {
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+
+      .tab-button {
+        font-size: 14px;
+        min-height: 46px;
+        padding-inline: 6px;
+      }
+
+      .panel,
+      .reader-toolbar,
+      .reader-text {
+        padding: 14px;
+      }
+
+      .reader-text {
+        min-height: 62dvh;
+        max-height: calc(100dvh - 210px);
+        font-size: 17px;
+        line-height: 1.85;
+      }
+
+      .button-row > button {
+        flex: 1 1 auto;
+      }
+
+      .dict-panel {
+        width: calc(100vw - 16px);
+        max-height: calc(100dvh - 18px);
+      }
+
+      .dict-header,
+      .dict-body {
+        padding: 12px;
+      }
+
+      .dict-header h2 {
+        font-size: 22px;
+      }
+    }
+
+    /* Product design layer: quiet reading-first layout */
+    :root {
+      --primary: #146c67;
+      --primary-dark: #0f514d;
+      --ink: #18201f;
+      --muted: #667574;
+      --line: #d9e1df;
+      --paper: #f6f8f7;
+      --surface: #ffffff;
+      --soft: #edf4f2;
+      --accent: #c7664b;
+      --danger: #b4443d;
+      --button-text: #ffffff;
+      --secondary-bg: #ffffff;
+      --danger-bg: #fff2ef;
+      --danger-border: #f0beb6;
+      --field-bg: #ffffff;
+      --header-bg: rgba(246, 248, 247, 0.92);
+      --brand-text: #ffffff;
+      --tab-bg: rgba(255, 255, 255, 0.72);
+      --card-bg: #ffffff;
+      --pill-text: #3c504e;
+      --empty-border: #cdd8d5;
+      --empty-bg: #f2f6f5;
+      --reader-word: #151b1a;
+      --word-underline: rgba(20, 108, 103, 0.38);
+      --word-hover-bg: #dcefed;
+      --overlay-bg: rgba(13, 18, 18, 0.28);
+      --dict-header-bg: #ffffff;
+      --section-heading: #30433f;
+      --note-bg: #eef7f6;
+      --note-text: #245d58;
+      --focus-ring: rgba(20, 108, 103, 0.28);
+      --shadow: 0 22px 46px rgba(18, 29, 28, 0.15);
+      --subtle-shadow: 0 1px 2px rgba(18, 29, 28, 0.05);
+      --radius: 8px;
+      --content-max: 1120px;
+      --reader-max: 780px;
+    }
+
+    html[data-theme="dark"] {
+      --primary: #72c7be;
+      --primary-dark: #56aaa2;
+      --ink: #edf2f1;
+      --muted: #a2b2af;
+      --line: #313b3a;
+      --paper: #111414;
+      --surface: #191f1e;
+      --soft: #202b29;
+      --accent: #f0a07f;
+      --danger: #ff9d92;
+      --button-text: #09211f;
+      --secondary-bg: #1d2524;
+      --danger-bg: #341f1d;
+      --danger-border: #6b3834;
+      --field-bg: #151a1a;
+      --header-bg: rgba(17, 20, 20, 0.92);
+      --brand-text: #09211f;
+      --tab-bg: rgba(29, 37, 36, 0.78);
+      --card-bg: #191f1e;
+      --pill-text: #c8dedb;
+      --empty-border: #3a4644;
+      --empty-bg: #151b1a;
+      --reader-word: #edf2f1;
+      --word-underline: rgba(114, 199, 190, 0.45);
+      --word-hover-bg: #1f3d39;
+      --overlay-bg: rgba(0, 0, 0, 0.56);
+      --dict-header-bg: #171d1c;
+      --section-heading: #cce4df;
+      --note-bg: #152825;
+      --note-text: #b6ddd8;
+      --focus-ring: rgba(114, 199, 190, 0.36);
+      --shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+      --subtle-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--soft) 62%, transparent), transparent 260px),
+        var(--paper);
+    }
+
+    body,
+    input,
+    select,
+    textarea,
+    button {
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      min-height: 42px;
+      border-radius: 7px;
+      padding: 9px 13px;
+      background: var(--primary);
+      color: var(--button-text);
+      box-shadow: none;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+
+    button:hover {
+      filter: none;
+      transform: translateY(-1px);
+    }
+
+    button.secondary,
+    button.ghost {
+      background: transparent;
+      border-color: var(--line);
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    button.danger {
+      font-weight: 650;
+    }
+
+    button.icon {
+      border-radius: 999px;
+      font-size: 18px;
+    }
+
+    input,
+    select,
+    textarea {
+      border-radius: 7px;
+      border-color: var(--line);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .app-header {
+      background: var(--header-bg);
+      border-bottom-color: color-mix(in srgb, var(--line) 78%, transparent);
+    }
+
+    .header-inner {
+      padding: 12px 18px 11px;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      background: var(--primary);
+      color: var(--brand-text);
+      box-shadow: none;
+    }
+
+    h1 {
+      font-size: 17px;
+      font-weight: 850;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+    }
+
+    .tabs {
+      padding: 3px;
+      gap: 3px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--surface) 78%, transparent);
+    }
+
+    .tab-button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .tab-button[aria-selected="true"] {
+      background: var(--surface);
+      border-color: transparent;
+      color: var(--ink);
+      box-shadow: 0 1px 8px rgba(18, 29, 28, 0.08);
+    }
+
+    main {
+      padding: 22px 18px 46px;
+    }
+
+    .section-grid {
+      gap: 18px;
+    }
+
+    .panel {
+      border-color: var(--line);
+      border-radius: 8px;
+      padding: clamp(16px, 2.1vw, 22px);
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .panel h2 {
+      margin-bottom: 8px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .panel h3 {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .view-header {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .view-kicker {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .view-lead {
+      margin: 0;
+      max-width: 58ch;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .discover-panel {
+      padding-bottom: 18px;
+    }
+
+    .search-primary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .search-primary label {
+      min-width: 0;
+    }
+
+    .inline-disclosure,
+    .utility-panel,
+    .settings-disclosure,
+    .article-more,
+    .dict-more {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--surface) 86%, var(--soft));
+    }
+
+    .inline-disclosure > summary,
+    .utility-panel > summary,
+    .settings-disclosure > summary,
+    .article-more > summary,
+    .dict-more > summary {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-weight: 800;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .inline-disclosure > summary::-webkit-details-marker,
+    .utility-panel > summary::-webkit-details-marker,
+    .settings-disclosure > summary::-webkit-details-marker,
+    .article-more > summary::-webkit-details-marker,
+    .dict-more > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .inline-disclosure > summary::after,
+    .utility-panel > summary::after,
+    .settings-disclosure > summary::after,
+    .article-more > summary::after,
+    .dict-more > summary::after {
+      content: "⌄";
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1;
+      transition: transform 160ms ease;
+    }
+
+    .inline-disclosure[open] > summary::after,
+    .utility-panel[open] > summary::after,
+    .settings-disclosure[open] > summary::after,
+    .article-more[open] > summary::after,
+    .dict-more[open] > summary::after {
+      transform: rotate(180deg);
+    }
+
+    .disclosure-body,
+    .utility-content,
+    .settings-disclosure-body,
+    .dict-more-grid {
+      padding: 0 12px 12px;
+    }
+
+    .word-range {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .status {
+      margin: 0;
+      min-height: 22px;
+      font-size: 13px;
+    }
+
+    .two-column {
+      gap: 14px;
+    }
+
+    .results,
+    .shelf-list {
+      gap: 8px;
+    }
+
+    .result-card,
+    .article-card {
+      border-radius: 8px;
+      border-color: color-mix(in srgb, var(--line) 86%, transparent);
+      box-shadow: none;
+      transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
+    }
+
+    .result-card:hover,
+    .article-card:hover {
+      border-color: color-mix(in srgb, var(--primary) 44%, var(--line));
+      transform: translateY(-1px);
+    }
+
+    .result-card {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 14px;
+    }
+
+    .result-main,
+    .article-main {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .result-actions,
+    .article-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .result-actions button {
+      white-space: nowrap;
+    }
+
+    .card-title {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 820;
+      line-height: 1.35;
+    }
+
+    .meta-list {
+      gap: 6px 10px;
+      font-size: 12.5px;
+    }
+
+    .meta-list span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .pill {
+      min-height: 24px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--pill-text);
+      font-size: 12px;
+    }
+
+    .empty-state {
+      background: transparent;
+      border-color: var(--empty-border);
+      color: var(--muted);
+    }
+
+    .shelf-list {
+      grid-template-columns: 1fr;
+    }
+
+    .article-card {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .article-cover {
+      width: 46px;
+      height: 58px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, color-mix(in srgb, var(--primary) 18%, var(--surface)), var(--soft));
+      border: 1px solid var(--line);
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .article-card .card-topline {
+      align-items: center;
+    }
+
+    .article-card .button-row {
+      justify-content: flex-end;
+    }
+
+    .article-more {
+      margin-top: 8px;
+      background: transparent;
+    }
+
+    .article-more > summary {
+      min-height: 38px;
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .article-more .button-row {
+      justify-content: flex-start;
+      padding: 0 10px 10px;
+    }
+
+    .memo-editor {
+      padding: 0 10px 10px;
+    }
+
+    .reader-shell {
+      max-width: var(--reader-max);
+      gap: 12px;
+    }
+
+    .reader-toolbar {
+      border-color: transparent;
+      background: transparent;
+      padding: 0 0 8px;
+      box-shadow: none;
+    }
+
+    .reader-title {
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 860;
+    }
+
+    .reader-toolbar .button-row {
+      justify-content: flex-end;
+    }
+
+    .reader-text {
+      min-height: 66dvh;
+      max-height: none;
+      border-color: color-mix(in srgb, var(--line) 80%, transparent);
+      background: var(--surface);
+      padding: clamp(22px, 4vw, 44px);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(18px, 1.6vw, 21px);
+      line-height: 1.92;
+      box-shadow: var(--subtle-shadow);
+    }
+
+    .word {
+      border-radius: 3px;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+
+    .overlay {
+      place-items: stretch end;
+      padding: 0;
+    }
+
+    .dict-panel {
+      width: min(460px, 100vw);
+      max-height: 100dvh;
+      height: 100dvh;
+      border-width: 0 0 0 1px;
+      border-radius: 0;
+      box-shadow: var(--shadow);
+      animation: dictSlideIn 190ms ease-out both;
+    }
+
+    .dict-header {
+      padding: 18px;
+    }
+
+    .dict-header h2 {
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .dict-body {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 14px 18px 24px;
+    }
+
+    .dict-section {
+      gap: 8px;
+      padding: 13px;
+      box-shadow: none;
+    }
+
+    .dict-focus {
+      border-color: color-mix(in srgb, var(--primary) 38%, var(--line));
+      background: color-mix(in srgb, var(--soft) 58%, var(--surface));
+    }
+
+    .dict-section h3 {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+    }
+
+    .dict-value {
+      font-size: 15px;
+    }
+
+    .sentence-pair {
+      gap: 8px;
+    }
+
+    .sentence-pane {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface);
+    }
+
+    .dict-more {
+      background: transparent;
+    }
+
+    .dict-more-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    @keyframes dictSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .settings-layout {
+      display: grid;
+      gap: 12px;
+    }
+
+    .settings-block {
+      margin-top: 12px;
+      padding-top: 12px;
+    }
+
+    .startup-splash {
+      background:
+        radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 34%),
+        var(--paper);
+    }
+
+    .startup-line,
+    .startup-mark {
+      background: var(--primary);
+    }
+
+    @media (min-width: 760px) {
+      .header-inner {
+        grid-template-columns: minmax(260px, 1fr) minmax(360px, 460px);
+      }
+
+      .search-primary {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+      }
+
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .two-column > .panel:last-child {
+        position: static;
+      }
+
+      .results {
+        grid-template-columns: 1fr;
+      }
+
+      .result-card,
+      .article-card {
+        min-height: 0;
+      }
+
+      .reader-toolbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .dict-body {
+        grid-template-columns: 1fr;
+      }
+
+      .dict-body > .button-row,
+      .dict-section[aria-labelledby="definitionHeading"],
+      .dict-section[aria-labelledby="jaHeading"],
+      .dict-section[aria-labelledby="exampleHeading"],
+      .dict-section[aria-labelledby="aiExtensionsHeading"],
+      .dict-section[aria-labelledby="sentencePairHeading"] {
+        grid-column: auto;
+      }
+
+      .sentence-pair {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding-bottom: 74px;
+      }
+
+      .app-header {
+        position: static;
+        border-bottom: 0;
+      }
+
+      .header-inner {
+        padding: 14px 14px 0;
+      }
+
+      .tabs {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 40;
+        box-shadow: 0 14px 34px rgba(18, 29, 28, 0.22);
+        backdrop-filter: blur(14px);
+      }
+
+      main {
+        padding: 18px 12px 24px;
+      }
+
+      .panel {
+        padding: 15px;
+      }
+
+      .panel h2 {
+        font-size: 20px;
+      }
+
+      .result-card {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .result-actions {
+        width: 100%;
+      }
+
+      .result-actions button {
+        width: 100%;
+      }
+
+      .article-card {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .article-actions {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
+      .article-actions button {
+        flex: 1;
+      }
+
+      .reader-text {
+        min-height: calc(100dvh - 220px);
+        padding: 20px 16px;
+        font-size: 18px;
+        line-height: 1.86;
+      }
+
+      .reader-toolbar .button-row {
+        justify-content: stretch;
+      }
+
+      .reader-toolbar .button-row > button {
+        flex: 1;
+      }
+
+      .analysis-panel {
+        padding: 14px;
+      }
+
+      .analysis-header {
+        display: grid;
+      }
+
+      .analysis-header > button {
+        width: 100%;
+      }
+
+      .structure-flow {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .overlay {
+        place-items: end stretch;
+      }
+
+      .dict-panel {
+        width: 100vw;
+        height: min(78dvh, 720px);
+        max-height: 84dvh;
+        border-width: 1px 0 0;
+        border-radius: 14px 14px 0 0;
+        animation: dictSheetIn 190ms ease-out both;
+      }
+
+      @keyframes dictSheetIn {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
+    @media (max-width: 420px) {
+      .brand-subtitle {
+        display: none;
+      }
+
+      .tab-button {
+        min-height: 42px;
+        font-size: 13px;
+      }
+
+      .word-range,
+      .sort-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .article-cover {
+        width: 40px;
+        height: 52px;
+      }
+    }
+
+    /* Stability fixes for scene switches and mobile navigation */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+
+    html {
+      overflow-y: scroll;
+      scrollbar-gutter: stable;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    .app-header {
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
+    }
+
+    main {
+      padding-left: max(16px, var(--safe-left));
+      padding-right: max(16px, var(--safe-right));
+    }
+
+    main {
+      min-height: calc(100dvh - 92px);
+    }
+
+    .view.active {
+      min-height: calc(100dvh - 150px);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding-bottom: calc(90px + var(--safe-bottom));
+      }
+
+      .app-header {
+        position: static !important;
+        top: auto !important;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .tabs {
+        position: fixed !important;
+        top: auto !important;
+        bottom: calc(10px + var(--safe-bottom)) !important;
+        left: max(10px, var(--safe-left)) !important;
+        right: max(10px, var(--safe-right)) !important;
+        z-index: 80;
+      }
+
+      main {
+        min-height: calc(100dvh - 116px);
+        padding-top: 14px;
+        padding-left: max(12px, var(--safe-left));
+        padding-right: max(12px, var(--safe-right));
+        padding-bottom: calc(104px + var(--safe-bottom));
+      }
+
+      .view.active {
+        min-height: calc(100dvh - 160px);
+      }
+    }
+
+    /* Restore the dictionary to the previous full modal layout */
+    .overlay {
+      place-items: center;
+      padding: 14px;
+    }
+
+    .dict-panel {
+      width: min(760px, calc(100vw - 28px));
+      height: auto;
+      max-height: min(760px, 92dvh);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: none;
+    }
+
+    .dict-header {
+      padding: 16px;
+    }
+
+    .dict-header h2 {
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .dict-body {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .dict-section {
+      gap: 6px;
+      padding: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .dict-section h3 {
+      margin: 0;
+      color: var(--section-heading);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .dict-value {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .sentence-pair {
+      display: grid;
+      gap: 12px;
+    }
+
+    .sentence-pane {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    @media (min-width: 760px) {
+      .dict-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .dict-body > .button-row,
+      .dict-section[aria-labelledby="definitionHeading"],
+      .dict-section[aria-labelledby="jaHeading"],
+      .dict-section[aria-labelledby="exampleHeading"],
+      .dict-section[aria-labelledby="aiExtensionsHeading"],
+      .dict-section[aria-labelledby="sentencePairHeading"] {
+        grid-column: 1 / -1;
+      }
+
+      .sentence-pair {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .overlay {
+        place-items: center;
+        padding: 8px;
+      }
+
+      .dict-panel {
+        width: calc(100vw - 16px);
+        height: auto;
+        max-height: calc(100dvh - 18px);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+
+      .dict-header,
+      .dict-body {
+        padding: 12px;
+      }
+
+      .dict-header h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="startupSplash" class="startup-splash" aria-hidden="true">
+    <div class="startup-content">
+      <div class="startup-book" aria-hidden="true">
+        <span class="startup-page left"></span>
+        <span class="startup-page right"></span>
+        <span class="startup-mark">ER</span>
+      </div>
+      <p class="startup-title">English Reading Shelf</p>
+      <p class="startup-subtitle">英文多読アプリ</p>
+      <span class="startup-line" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">ER</div>
+          <div>
+            <h1>英文多読アプリ</h1>
+            <p class="brand-subtitle">English Reading Shelf</p>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="画面切り替え">
+        <button class="tab-button" type="button" data-tab="fetch" aria-selected="true">取得</button>
+        <button class="tab-button" type="button" data-tab="shelf" aria-selected="false">本棚</button>
+        <button class="tab-button" type="button" data-tab="reader" aria-selected="false">読む</button>
+        <button class="tab-button" type="button" data-tab="settings" aria-selected="false">設定</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="fetchView" class="view active" aria-labelledby="fetchHeading">
+      <div class="section-grid">
+        <div class="panel discover-panel">
+          <div class="view-header">
+            <span class="view-kicker">Discover</span>
+            <h2 id="fetchHeading">読むものを選ぶ</h2>
+            <p class="view-lead">検索なしでも候補を表示します。まずはタイトルを眺めて、気になったものだけ本棚に入れられます。</p>
+          </div>
+          <form id="searchForm" class="form-grid">
+            <div class="search-primary">
+              <label>
+                検索キーワード（任意）
+                <input id="searchQuery" type="search" autocomplete="off" placeholder="空欄なら候補一覧を表示">
+              </label>
+              <button type="submit">候補を更新</button>
+            </div>
+            <details class="inline-disclosure">
+              <summary>取得条件</summary>
+              <div class="disclosure-body form-grid">
+                <div class="form-row">
+                  <label>
+                    最初に表示する取得元
+                    <select id="sourceSelect">
+                      <option value="simplewiki">Simple English Wikipedia</option>
+                      <option value="enwiki">English Wikipedia</option>
+                      <option value="wikinews">English Wikinews</option>
+                      <option value="wikibooks">English Wikibooks</option>
+                      <option value="wikisource">English Wikisource</option>
+                      <option value="gutendex">Gutendex / Project Gutenberg</option>
+                    </select>
+                  </label>
+                  <div class="word-range">
+                    <label>
+                      最小語数
+                      <input id="wordMinInput" type="number" min="0" step="50" value="300">
+                    </label>
+                    <label>
+                      最大語数
+                      <input id="wordMaxInput" type="number" min="0" step="50" value="600">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </form>
+          <p id="searchStatus" class="status" aria-live="polite"></p>
+        </div>
+
+        <div class="two-column">
+          <div class="panel">
+            <div class="view-header">
+              <span class="view-kicker">Candidates</span>
+              <h2>候補一覧</h2>
+            </div>
+            <div id="resultsList" class="results">
+              <div class="empty-state">候補一覧を読み込んでいます。</div>
+            </div>
+          </div>
+
+          <details class="panel utility-panel">
+            <summary>手動貼り付けで追加</summary>
+            <div class="utility-content">
+              <form id="manualForm" class="form-grid">
+                <label>
+                  タイトル
+                  <input id="manualTitle" type="text" autocomplete="off">
+                </label>
+                <label>
+                  本文
+                  <textarea id="manualText" spellcheck="false"></textarea>
+                </label>
+                <div class="form-row">
+                  <label>
+                    出典メモ
+                    <input id="manualSource" type="text" autocomplete="off" placeholder="任意">
+                  </label>
+                  <label>
+                    URL
+                    <input id="manualUrl" type="url" autocomplete="off" placeholder="任意">
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button type="submit">本棚に追加</button>
+                </div>
+              </form>
+              <p id="manualStatus" class="status" aria-live="polite"></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="shelfView" class="view" aria-labelledby="shelfHeading">
+      <div class="section-grid">
+        <div class="panel">
+          <div class="card-topline">
+            <div>
+              <span class="view-kicker">Library</span>
+              <h2 id="shelfHeading">本棚</h2>
+              <p id="shelfStatus" class="status" aria-live="polite"></p>
+            </div>
+            <details class="inline-disclosure shelf-sort">
+              <summary>並び替え</summary>
+              <div class="disclosure-body sort-controls">
+                <label>
+                  並び替え対象
+                  <select id="sortSelect">
+                    <option value="lastReadAt">最後に開いた日時</option>
+                    <option value="addedAt">追加日</option>
+                    <option value="title">タイトル</option>
+                    <option value="wordCount">語数</option>
+                    <option value="favorite">お気に入り</option>
+                  </select>
+                </label>
+                <label>
+                  順序
+                  <select id="sortDirectionSelect">
+                    <option value="desc">降順</option>
+                    <option value="asc">昇順</option>
+                  </select>
+                </label>
+              </div>
+            </details>
+          </div>
+        </div>
+        <div id="shelfList" class="shelf-list"></div>
+      </div>
+    </section>
+
+    <section id="readerView" class="view" aria-labelledby="readerHeading">
+      <div id="readerEmpty" class="empty-state">本棚から記事を開くと、ここで読めます。</div>
+      <div id="readerShell" class="reader-shell" hidden>
+        <div class="reader-toolbar">
+          <div>
+            <span class="view-kicker">Reader</span>
+            <h2 id="readerHeading" class="reader-title"></h2>
+            <div id="readerMeta" class="meta-list"></div>
+          </div>
+          <div class="button-row">
+            <button id="analyzeArticleButton" class="secondary" type="button">AI全文解析</button>
+            <button id="backToShelfButton" class="secondary" type="button">本棚に戻る</button>
+          </div>
+        </div>
+        <div id="readerText" class="reader-text" tabindex="0" aria-label="本文"></div>
+        <section id="analysisPanel" class="analysis-panel" aria-labelledby="analysisHeading" hidden>
+          <div class="analysis-header">
+            <div>
+              <span class="view-kicker">Analysis</span>
+              <h3 id="analysisHeading">AI全文解析</h3>
+              <p id="analysisStatus" class="status" aria-live="polite"></p>
+            </div>
+            <button id="closeAnalysisButton" class="secondary" type="button">閉じる</button>
+          </div>
+          <div class="analysis-legend" aria-label="構文ラベル">
+            <span class="legend-chip" data-kind="subject">S 主語</span>
+            <span class="legend-chip" data-kind="verb">V 動詞</span>
+            <span class="legend-chip" data-kind="object">O 目的語</span>
+            <span class="legend-chip" data-kind="complement">C 補語</span>
+            <span class="legend-chip" data-kind="adverbial">M 修飾</span>
+          </div>
+          <div id="analysisList" class="analysis-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="settingsView" class="view" aria-labelledby="settingsHeading">
+      <div class="panel">
+        <div class="view-header">
+          <span class="view-kicker">Settings</span>
+          <h2 id="settingsHeading">設定</h2>
+        </div>
+        <form id="settingsForm" class="form-grid">
+          <label>
+            表示テーマ
+            <select id="themeSelect">
+              <option value="light">ライト</option>
+              <option value="dark">ダーク</option>
+            </select>
+          </label>
+          <label>
+            起動アニメーション
+            <select id="openingSelect">
+              <option value="on">オン</option>
+              <option value="off">オフ</option>
+            </select>
+          </label>
+          <details class="settings-disclosure">
+            <summary>AI補助</summary>
+            <div class="settings-disclosure-body">
+              <p class="settings-note">文脈説明と一文和訳はPuter AIを使います。APIキーは不要です。初回はPuterへのログインが必要になる場合があります。</p>
+            </div>
+          </details>
+        </form>
+        <p id="settingsStatus" class="status" aria-live="polite"></p>
+
+        <details class="settings-block settings-disclosure">
+          <summary>PWA</summary>
+          <div class="settings-disclosure-body">
+            <p id="pwaStatus" class="status" aria-live="polite">確認中...</p>
+            <div class="button-row">
+              <button id="installPwaButton" class="secondary" type="button" hidden>この端末に追加</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-block settings-disclosure">
+          <summary>辞書キャッシュ</summary>
+          <div class="settings-disclosure-body">
+            <p id="cacheCountText" class="status">確認中...</p>
+            <div class="button-row">
+              <button id="refreshCacheButton" class="secondary" type="button">件数を更新</button>
+              <button id="clearCacheButton" class="danger" type="button">辞書キャッシュを削除</button>
+            </div>
+            <p id="cacheStatus" class="status" aria-live="polite"></p>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <div id="dictOverlay" class="overlay hidden" aria-hidden="true">
+    <article class="dict-panel" role="dialog" aria-modal="true" aria-labelledby="dictWord">
+      <div class="dict-header">
+        <div>
+          <h2 id="dictWord"></h2>
+        </div>
+        <button id="closeDictButton" class="secondary icon" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="dict-body">
+        <div class="button-row">
+          <button id="refreshLookupButton" class="secondary" type="button">再取得</button>
+        </div>
+
+        <section class="dict-section" aria-labelledby="posHeading">
+          <h3 id="posHeading">品詞</h3>
+          <p id="dictPartOfSpeech" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="definitionHeading">
+          <h3 id="definitionHeading">英英定義</h3>
+          <p id="dictDefinition" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="jaHeading">
+          <h3 id="jaHeading">日本語説明</h3>
+          <p id="dictJapanese" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="exampleHeading">
+          <h3 id="exampleHeading">例文</h3>
+          <p id="dictExample" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="aiMeaningHeading">
+          <h3 id="aiMeaningHeading">AI：文脈内の意味</h3>
+          <p id="aiMeaning" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="aiCoreHeading">
+          <h3 id="aiCoreHeading">AI：コアイメージ</h3>
+          <p id="aiCore" class="dict-value">読み込み中...</p>
+        </section>
+
+        <section class="dict-section" aria-labelledby="aiExtensionsHeading">
+          <h3 id="aiExtensionsHeading">AI：意味の広がり</h3>
+          <ul id="aiExtensions" class="dict-list"></ul>
+        </section>
+
+        <section class="dict-section" aria-labelledby="sentencePairHeading">
+          <h3 id="sentencePairHeading">押した単語を含む一文</h3>
+          <div class="sentence-pair">
+            <div class="sentence-pane">
+              <h4>英文</h4>
+              <p id="sentenceOriginalValue" class="dict-value">読み込み中...</p>
+            </div>
+            <div class="sentence-pane">
+              <h4>和文</h4>
+              <p id="sentenceTranslationValue" class="dict-value">読み込み中...</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </article>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DB_NAME = "readingAppDB";
+      const DB_VERSION = 1;
+      const THEME_STORAGE = "englishReadingShelf.theme";
+      const OPENING_STORAGE = "englishReadingShelf.openingAnimation";
+      const AI_RETRY_MESSAGE = "接続失敗リトライ中...";
+      const AI_MAX_RETRIES = 2;
+      const PUTER_SCRIPT_URL = "https://js.puter.com/v2/";
+      const LAST_ARTICLE_STORAGE = "englishReadingShelf.lastArticleId";
+      const WORD_CACHE_VERSION = "v5-puter-ai-example";
+      const DEFAULT_SOURCE_LIMIT = 8;
+      const DEFAULT_WORD_MIN = 300;
+      const DEFAULT_WORD_MAX = 600;
+      const WORD_RE = /[A-Za-z]+(?:['’][A-Za-z]+)*(?:-[A-Za-z]+(?:['’][A-Za-z]+)*)*/g;
+
+      const sources = {
+        simplewiki: {
+          label: "Simple English Wikipedia",
+          kind: "mediawiki",
+          api: "https://simple.wikipedia.org/w/api.php",
+          pageBase: "https://simple.wikipedia.org/wiki/"
+        },
+        enwiki: {
+          label: "English Wikipedia",
+          kind: "mediawiki",
+          api: "https://en.wikipedia.org/w/api.php",
+          pageBase: "https://en.wikipedia.org/wiki/"
+        },
+        wikinews: {
+          label: "English Wikinews",
+          kind: "mediawiki",
+          api: "https://en.wikinews.org/w/api.php",
+          pageBase: "https://en.wikinews.org/wiki/"
+        },
+        wikibooks: {
+          label: "English Wikibooks",
+          kind: "mediawiki",
+          api: "https://en.wikibooks.org/w/api.php",
+          pageBase: "https://en.wikibooks.org/wiki/"
+        },
+        wikisource: {
+          label: "English Wikisource",
+          kind: "mediawiki",
+          api: "https://en.wikisource.org/w/api.php",
+          pageBase: "https://en.wikisource.org/wiki/"
+        },
+        gutendex: {
+          label: "Gutendex / Project Gutenberg",
+          kind: "gutendex",
+          api: "https://gutendex.com/books"
+        }
+      };
+
+      const state = {
+        db: null,
+        searchResults: [],
+        currentArticle: null,
+        currentLookup: null,
+        discoverySerial: 0,
+        lookupSerial: 0,
+        analysisSerial: 0,
+        deferredInstallPrompt: null,
+        puterLoadPromise: null
+      };
+
+      const els = {
+        startupSplash: document.getElementById("startupSplash"),
+        tabs: document.querySelectorAll(".tab-button"),
+        views: {
+          fetch: document.getElementById("fetchView"),
+          shelf: document.getElementById("shelfView"),
+          reader: document.getElementById("readerView"),
+          settings: document.getElementById("settingsView")
+        },
+        searchForm: document.getElementById("searchForm"),
+        searchQuery: document.getElementById("searchQuery"),
+        sourceSelect: document.getElementById("sourceSelect"),
+        wordMinInput: document.getElementById("wordMinInput"),
+        wordMaxInput: document.getElementById("wordMaxInput"),
+        searchStatus: document.getElementById("searchStatus"),
+        resultsList: document.getElementById("resultsList"),
+        manualForm: document.getElementById("manualForm"),
+        manualTitle: document.getElementById("manualTitle"),
+        manualText: document.getElementById("manualText"),
+        manualSource: document.getElementById("manualSource"),
+        manualUrl: document.getElementById("manualUrl"),
+        manualStatus: document.getElementById("manualStatus"),
+        shelfStatus: document.getElementById("shelfStatus"),
+        shelfList: document.getElementById("shelfList"),
+        sortSelect: document.getElementById("sortSelect"),
+        sortDirectionSelect: document.getElementById("sortDirectionSelect"),
+        readerEmpty: document.getElementById("readerEmpty"),
+        readerShell: document.getElementById("readerShell"),
+        readerTitle: document.getElementById("readerHeading"),
+        readerMeta: document.getElementById("readerMeta"),
+        readerText: document.getElementById("readerText"),
+        analyzeArticleButton: document.getElementById("analyzeArticleButton"),
+        analysisPanel: document.getElementById("analysisPanel"),
+        analysisStatus: document.getElementById("analysisStatus"),
+        analysisList: document.getElementById("analysisList"),
+        closeAnalysisButton: document.getElementById("closeAnalysisButton"),
+        backToShelfButton: document.getElementById("backToShelfButton"),
+        settingsForm: document.getElementById("settingsForm"),
+        themeSelect: document.getElementById("themeSelect"),
+        openingSelect: document.getElementById("openingSelect"),
+        settingsStatus: document.getElementById("settingsStatus"),
+        cacheCountText: document.getElementById("cacheCountText"),
+        refreshCacheButton: document.getElementById("refreshCacheButton"),
+        clearCacheButton: document.getElementById("clearCacheButton"),
+        cacheStatus: document.getElementById("cacheStatus"),
+        pwaStatus: document.getElementById("pwaStatus"),
+        installPwaButton: document.getElementById("installPwaButton"),
+        dictOverlay: document.getElementById("dictOverlay"),
+        closeDictButton: document.getElementById("closeDictButton"),
+        refreshLookupButton: document.getElementById("refreshLookupButton"),
+        dictWord: document.getElementById("dictWord"),
+        dictPartOfSpeech: document.getElementById("dictPartOfSpeech"),
+        dictDefinition: document.getElementById("dictDefinition"),
+        dictJapanese: document.getElementById("dictJapanese"),
+        dictExample: document.getElementById("dictExample"),
+        aiMeaning: document.getElementById("aiMeaning"),
+        sentenceOriginalValue: document.getElementById("sentenceOriginalValue"),
+        sentenceTranslationValue: document.getElementById("sentenceTranslationValue"),
+        aiCore: document.getElementById("aiCore"),
+        aiExtensions: document.getElementById("aiExtensions")
+      };
+
+      document.addEventListener("DOMContentLoaded", init);
+
+      async function init() {
+        bindEvents();
+        els.themeSelect.value = getTheme();
+        applyTheme(els.themeSelect.value);
+        els.openingSelect.value = getOpeningPreference();
+        applyOpeningPreference(els.openingSelect.value);
+        runStartupAnimation();
+        localStorage.removeItem(["englishReadingShelf", "ge" + "miniApiKey"].join("."));
+        registerServiceWorker();
+
+        try {
+          state.db = await openDatabase();
+          await renderShelf();
+          const lastId = localStorage.getItem(LAST_ARTICLE_STORAGE);
+          if (lastId) {
+            const article = await getRecord("articles", lastId);
+            if (article) {
+              state.currentArticle = article;
+              renderReader(article, false);
+            }
+          }
+          await refreshCacheInfo();
+        } catch (error) {
+          setStatus(els.shelfStatus, "保存に失敗しました", true);
+          console.error(error);
+        }
+
+        loadCandidateList().catch((error) => {
+          setStatus(els.searchStatus, "取得に失敗しました。取得元または通信状態を確認してください", true);
+          console.error(error);
+        });
+      }
+
+      function bindEvents() {
+        els.tabs.forEach((button) => {
+          button.addEventListener("click", () => switchTab(button.dataset.tab));
+        });
+
+        els.searchForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          await handleSearch();
+        });
+        els.sourceSelect.addEventListener("change", () => {
+          loadCandidateList().catch((error) => {
+            setStatus(els.searchStatus, "取得に失敗しました。取得元または通信状態を確認してください", true);
+            console.error(error);
+          });
+        });
+
+        els.manualForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          await handleManualAdd();
+        });
+
+        els.sortSelect.addEventListener("change", renderShelf);
+        els.sortDirectionSelect.addEventListener("change", renderShelf);
+        els.backToShelfButton.addEventListener("click", () => switchTab("shelf"));
+        els.analyzeArticleButton.addEventListener("click", handleArticleAnalysis);
+        els.closeAnalysisButton.addEventListener("click", hideArticleAnalysis);
+        els.readerText.addEventListener("click", handleReaderClick);
+        els.themeSelect.addEventListener("change", () => {
+          applyTheme(els.themeSelect.value);
+          localStorage.setItem(THEME_STORAGE, els.themeSelect.value);
+          setStatus(els.settingsStatus, "表示テーマを保存しました", false);
+        });
+
+        els.openingSelect.addEventListener("change", () => {
+          localStorage.setItem(OPENING_STORAGE, els.openingSelect.value);
+          applyOpeningPreference(els.openingSelect.value);
+          setStatus(els.settingsStatus, "起動アニメーション設定を保存しました", false);
+        });
+
+        els.installPwaButton.addEventListener("click", installPwa);
+
+        window.addEventListener("beforeinstallprompt", (event) => {
+          event.preventDefault();
+          state.deferredInstallPrompt = event;
+          updatePwaInstallState();
+        });
+
+        window.addEventListener("appinstalled", () => {
+          state.deferredInstallPrompt = null;
+          updatePwaInstallState();
+        });
+
+        els.refreshCacheButton.addEventListener("click", async () => {
+          await refreshCacheInfo();
+          setStatus(els.cacheStatus, "辞書キャッシュ件数を更新しました", false);
+        });
+
+        els.clearCacheButton.addEventListener("click", async () => {
+          if (!confirm("辞書キャッシュをすべて削除しますか？")) return;
+          try {
+            await clearStore("wordCache");
+            await refreshCacheInfo();
+            setStatus(els.cacheStatus, "辞書キャッシュを削除しました", false);
+          } catch (error) {
+            setStatus(els.cacheStatus, "辞書キャッシュの削除に失敗しました", true);
+            console.error(error);
+          }
+        });
+
+        els.closeDictButton.addEventListener("click", closeDictionary);
+        els.dictOverlay.addEventListener("click", (event) => {
+          if (event.target === els.dictOverlay) closeDictionary();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !els.dictOverlay.classList.contains("hidden")) {
+            closeDictionary();
+          }
+        });
+
+        els.refreshLookupButton.addEventListener("click", async () => {
+          if (!state.currentLookup) return;
+          await deleteRecord("wordCache", state.currentLookup.cacheKey);
+          await refreshCacheInfo();
+          await lookupWord(state.currentLookup, { force: true });
+        });
+      }
+
+      function switchTab(tabName) {
+        els.tabs.forEach((button) => {
+          button.setAttribute("aria-selected", String(button.dataset.tab === tabName));
+        });
+        Object.entries(els.views).forEach(([name, view]) => {
+          view.classList.toggle("active", name === tabName);
+        });
+        window.scrollTo(0, 0);
+      }
+
+      function getTheme() {
+        return localStorage.getItem(THEME_STORAGE) === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
+      }
+
+      function getOpeningPreference() {
+        return localStorage.getItem(OPENING_STORAGE) === "off" ? "off" : "on";
+      }
+
+      function applyOpeningPreference(value) {
+        const enabled = value !== "off" && !prefersReducedMotion();
+        document.documentElement.dataset.opening = enabled ? "on" : "off";
+        if (!enabled) {
+          hideStartupSplash(true);
+        }
+      }
+
+      function runStartupAnimation() {
+        if (!els.startupSplash) return;
+        if (getOpeningPreference() === "off" || prefersReducedMotion()) {
+          hideStartupSplash(true);
+          return;
+        }
+
+        window.setTimeout(() => hideStartupSplash(false), 1450);
+      }
+
+      function hideStartupSplash(immediate) {
+        if (!els.startupSplash || els.startupSplash.hidden) return;
+        if (immediate) {
+          els.startupSplash.hidden = true;
+          return;
+        }
+
+        els.startupSplash.classList.add("is-hiding");
+        window.setTimeout(() => {
+          els.startupSplash.hidden = true;
+        }, 380);
+      }
+
+      function prefersReducedMotion() {
+        return window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      }
+
+      async function registerServiceWorker() {
+        if (!("serviceWorker" in navigator)) {
+          updatePwaInstallState("この環境ではPWAを利用できません", true);
+          return;
+        }
+
+        if (!window.isSecureContext) {
+          updatePwaInstallState("PWAはHTTPSまたはlocalhostで有効です", true);
+          return;
+        }
+
+        try {
+          await navigator.serviceWorker.register("./sw.js");
+          updatePwaInstallState();
+        } catch (error) {
+          updatePwaInstallState("PWA登録に失敗しました", true);
+          console.error(error);
+        }
+      }
+
+      async function installPwa() {
+        if (!state.deferredInstallPrompt) {
+          updatePwaInstallState();
+          return;
+        }
+
+        const promptEvent = state.deferredInstallPrompt;
+        state.deferredInstallPrompt = null;
+        promptEvent.prompt();
+
+        try {
+          const choice = await promptEvent.userChoice;
+          if (choice && choice.outcome === "accepted") {
+            updatePwaInstallState("インストールしました", false);
+            return;
+          }
+          updatePwaInstallState("インストールをキャンセルしました", false);
+        } catch (error) {
+          updatePwaInstallState("インストール状態を確認できませんでした", true);
+          console.error(error);
+        }
+      }
+
+      function updatePwaInstallState(message, isError = false) {
+        const installed = isPwaDisplayMode();
+        els.installPwaButton.hidden = installed || !state.deferredInstallPrompt;
+
+        if (message) {
+          setStatus(els.pwaStatus, message, isError);
+        } else if (installed) {
+          setStatus(els.pwaStatus, "インストール済みです", false);
+        } else if (state.deferredInstallPrompt) {
+          setStatus(els.pwaStatus, "インストールできます", false);
+        } else if ("serviceWorker" in navigator && window.isSecureContext) {
+          setStatus(els.pwaStatus, "PWA準備完了", false);
+        } else {
+          setStatus(els.pwaStatus, "PWAはHTTP/HTTPS配信時に有効です", false);
+        }
+      }
+
+      function isPwaDisplayMode() {
+        return window.matchMedia("(display-mode: fullscreen)").matches ||
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true;
+      }
+
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains("articles")) {
+              const articles = db.createObjectStore("articles", { keyPath: "id" });
+              articles.createIndex("lastReadAt", "lastReadAt", { unique: false });
+              articles.createIndex("addedAt", "addedAt", { unique: false });
+              articles.createIndex("title", "title", { unique: false });
+            }
+            if (!db.objectStoreNames.contains("wordCache")) {
+              db.createObjectStore("wordCache", { keyPath: "key" });
+            }
+            if (!db.objectStoreNames.contains("settings")) {
+              db.createObjectStore("settings", { keyPath: "key" });
+            }
+          };
+
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function store(name, mode = "readonly") {
+        return state.db.transaction(name, mode).objectStore(name);
+      }
+
+      function getRecord(name, key) {
+        return requestToPromise(store(name).get(key));
+      }
+
+      function getAllRecords(name) {
+        return requestToPromise(store(name).getAll());
+      }
+
+      function putRecord(name, value) {
+        return requestToPromise(store(name, "readwrite").put(value));
+      }
+
+      function deleteRecord(name, key) {
+        return requestToPromise(store(name, "readwrite").delete(key));
+      }
+
+      function countRecords(name) {
+        return requestToPromise(store(name).count());
+      }
+
+      function clearStore(name) {
+        return requestToPromise(store(name, "readwrite").clear());
+      }
+
+      function requestToPromise(request) {
+        return new Promise((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function refreshCacheInfo() {
+        if (!state.db) return;
+        try {
+          const count = await countRecords("wordCache");
+          els.cacheCountText.textContent = `${count}件の辞書キャッシュがあります`;
+        } catch (error) {
+          els.cacheCountText.textContent = "辞書キャッシュ件数を確認できませんでした";
+          console.error(error);
+        }
+      }
+
+      async function handleSearch() {
+        await loadCandidateList();
+      }
+
+      async function loadCandidateList() {
+        const query = els.searchQuery.value.trim();
+        const sourceKey = els.sourceSelect.value;
+        const wordRange = getWordRange();
+        const serial = ++state.discoverySerial;
+        const orderedSourceKeys = [
+          sourceKey,
+          ...Object.keys(sources).filter((key) => key !== sourceKey)
+        ];
+
+        clearNode(els.resultsList);
+        appendEmpty(els.resultsList, query ? "検索中..." : "候補一覧を読み込み中...");
+        setStatus(els.searchStatus, makeLoadingStatus(query, wordRange, "選択中の取得元を確認中..."), false);
+        state.searchResults = [];
+
+        try {
+          const firstResults = await loadSourceResults(query, sourceKey, wordRange);
+          if (serial !== state.discoverySerial) return;
+          mergeSearchResults(firstResults);
+          renderSearchResults(state.searchResults);
+          setStatus(els.searchStatus, `${state.searchResults.length}件表示中。他の取得元も読み込み中...`, false);
+        } catch (error) {
+          console.error(error);
+        }
+
+        const backgroundKeys = orderedSourceKeys.slice(1);
+        await Promise.allSettled(backgroundKeys.map(async (key) => {
+          try {
+            const results = await loadSourceResults(query, key, wordRange);
+            if (serial !== state.discoverySerial) return;
+            mergeSearchResults(results);
+            renderSearchResults(state.searchResults);
+            setStatus(els.searchStatus, `${state.searchResults.length}件表示中。他の取得元も読み込み中...`, false);
+          } catch (error) {
+            console.error(error);
+          }
+        }));
+
+        if (serial !== state.discoverySerial) return;
+        if (!state.searchResults.length) {
+          renderSearchResults([]);
+          setStatus(els.searchStatus, `${wordRange.min}〜${wordRange.max}語の候補は見つかりませんでした`, true);
+          return;
+        }
+        setStatus(els.searchStatus, `${state.searchResults.length}件表示中`, false);
+      }
+
+      async function loadSourceResults(query, sourceKey, wordRange) {
+        const source = sources[sourceKey];
+        const candidates = query
+          ? source.kind === "mediawiki"
+            ? searchMediaWiki(query, sourceKey)
+            : searchGutendex(query)
+          : source.kind === "mediawiki"
+          ? listMediaWikiCandidates(sourceKey)
+          : searchGutendex("");
+        return filterCandidatesByWordRange(await candidates, wordRange);
+      }
+
+      function getWordRange() {
+        const minValue = parseInt(els.wordMinInput.value, 10);
+        const maxValue = parseInt(els.wordMaxInput.value, 10);
+        let min = Number.isFinite(minValue) ? Math.max(0, minValue) : DEFAULT_WORD_MIN;
+        let max = Number.isFinite(maxValue) ? Math.max(0, maxValue) : DEFAULT_WORD_MAX;
+        if (min > max) {
+          [min, max] = [max, min];
+        }
+        els.wordMinInput.value = String(min);
+        els.wordMaxInput.value = String(max);
+        return { min, max };
+      }
+
+      function makeLoadingStatus(query, wordRange, message) {
+        const prefix = query ? "検索中" : "候補一覧を読み込み中";
+        return `${prefix}（${wordRange.min}〜${wordRange.max}語）。${message}`;
+      }
+
+      async function filterCandidatesByWordRange(candidates, wordRange) {
+        const checked = await Promise.allSettled(candidates.map(async (candidate) => {
+          const articleInput = await fetchArticleInput(candidate);
+          const wordCount = countWords(articleInput.text);
+          if (wordCount < wordRange.min || wordCount > wordRange.max) {
+            return null;
+          }
+          return {
+            ...candidate,
+            wordCount,
+            articleInput: {
+              ...articleInput,
+              wordCount
+            }
+          };
+        }));
+
+        return checked
+          .filter((result) => result.status === "fulfilled" && result.value)
+          .map((result) => result.value);
+      }
+
+      function mergeSearchResults(results) {
+        const seen = new Set(state.searchResults.map((item) => item.id));
+        results.forEach((result) => {
+          if (!seen.has(result.id)) {
+            state.searchResults.push(result);
+            seen.add(result.id);
+          }
+        });
+      }
+
+      async function searchMediaWiki(query, sourceKey) {
+        const source = sources[sourceKey];
+        const url = new URL(source.api);
+        url.searchParams.set("origin", "*");
+        url.searchParams.set("action", "query");
+        url.searchParams.set("list", "search");
+        url.searchParams.set("srsearch", query);
+        url.searchParams.set("srlimit", "10");
+        url.searchParams.set("format", "json");
+
+        const data = await fetchJson(url.toString());
+        const rows = data.query && Array.isArray(data.query.search) ? data.query.search : [];
+        return rows.map((row) => ({
+          id: `${sourceKey}:${row.pageid}`,
+          sourceKey,
+          sourceLabel: source.label,
+          kind: "mediawiki",
+          pageid: row.pageid,
+          title: row.title || "Untitled",
+          description: "",
+          url: `${source.pageBase}${encodeURIComponent(String(row.title || "").replaceAll(" ", "_"))}`
+        }));
+      }
+
+      async function listMediaWikiCandidates(sourceKey) {
+        const source = sources[sourceKey];
+        const url = new URL(source.api);
+        url.searchParams.set("origin", "*");
+        url.searchParams.set("action", "query");
+        url.searchParams.set("list", "random");
+        url.searchParams.set("rnnamespace", "0");
+        url.searchParams.set("rnlimit", String(DEFAULT_SOURCE_LIMIT));
+        url.searchParams.set("format", "json");
+
+        const data = await fetchJson(url.toString());
+        const rows = data.query && Array.isArray(data.query.random) ? data.query.random : [];
+        return rows.map((row) => ({
+          id: `${sourceKey}:${row.id}`,
+          sourceKey,
+          sourceLabel: source.label,
+          kind: "mediawiki",
+          pageid: row.id,
+          title: row.title || "Untitled",
+          description: "",
+          url: `${source.pageBase}${encodeURIComponent(String(row.title || "").replaceAll(" ", "_"))}`
+        }));
+      }
+
+      async function searchGutendex(query) {
+        const url = new URL(sources.gutendex.api);
+        url.searchParams.set("languages", "en");
+        if (query) {
+          url.searchParams.set("search", query);
+        } else {
+          url.searchParams.set("sort", "popular");
+        }
+
+        const data = await fetchJson(url.toString());
+        const rows = Array.isArray(data.results) ? data.results.slice(0, query ? 10 : DEFAULT_SOURCE_LIMIT) : [];
+        return rows.map((book) => {
+          const authors = Array.isArray(book.authors)
+            ? book.authors.map((author) => author.name).filter(Boolean).join(", ")
+            : "";
+          return {
+            id: `gutendex:${book.id}`,
+            sourceKey: "gutendex",
+            sourceLabel: sources.gutendex.label,
+            kind: "gutendex",
+            book,
+            title: book.title || "Untitled",
+            description: authors || "Project Gutenberg text",
+            url: findGutendexTextUrl(book) || ""
+          };
+        });
+      }
+
+      function renderSearchResults(results) {
+        clearNode(els.resultsList);
+        if (!results.length) {
+          appendEmpty(els.resultsList, "検索結果はありません。");
+          return;
+        }
+
+        results.forEach((result) => {
+          const card = document.createElement("article");
+          card.className = "result-card";
+
+          const main = document.createElement("div");
+          main.className = "result-main";
+
+          const title = document.createElement("h3");
+          title.className = "card-title";
+          title.textContent = result.title;
+
+          const meta = document.createElement("div");
+          meta.className = "meta-list";
+          const source = document.createElement("span");
+          source.className = "pill";
+          source.textContent = result.sourceLabel;
+          meta.append(source);
+
+          if (typeof result.wordCount === "number") {
+            const words = document.createElement("span");
+            words.textContent = `${result.wordCount}語`;
+            meta.append(words);
+          }
+
+          const addButton = document.createElement("button");
+          addButton.type = "button";
+          addButton.textContent = "追加";
+          addButton.addEventListener("click", async () => addSearchResultToShelf(result.id, addButton));
+
+          const actions = document.createElement("div");
+          actions.className = "result-actions";
+          actions.append(addButton);
+
+          main.append(title, meta);
+          card.append(main, actions);
+          els.resultsList.append(card);
+        });
+      }
+
+      async function addSearchResultToShelf(resultId, button) {
+        const result = state.searchResults.find((item) => item.id === resultId);
+        if (!result) return;
+
+        button.disabled = true;
+        button.textContent = "取得中...";
+        setStatus(els.searchStatus, "本文を取得しています...", false);
+
+        try {
+          const articleInput = result.articleInput || await fetchArticleInput(result);
+          const article = makeArticle(articleInput);
+          await putRecord("articles", article);
+          await renderShelf();
+          setStatus(els.searchStatus, "本棚に追加しました", false);
+          switchTab("shelf");
+        } catch (error) {
+          setStatus(els.searchStatus, "取得に失敗しました。取得元または通信状態を確認してください", true);
+          console.error(error);
+        } finally {
+          button.disabled = false;
+          button.textContent = "追加";
+        }
+      }
+
+      function fetchArticleInput(result) {
+        return result.kind === "mediawiki"
+          ? fetchMediaWikiArticle(result)
+          : fetchGutendexArticle(result);
+      }
+
+      async function fetchMediaWikiArticle(result) {
+        const source = sources[result.sourceKey];
+        const url = new URL(source.api);
+        url.searchParams.set("origin", "*");
+        url.searchParams.set("action", "query");
+        url.searchParams.set("prop", "extracts|info");
+        url.searchParams.set("explaintext", "1");
+        url.searchParams.set("inprop", "url");
+        url.searchParams.set("format", "json");
+        url.searchParams.set("pageids", String(result.pageid));
+
+        const data = await fetchJson(url.toString());
+        const pages = data.query && data.query.pages ? data.query.pages : {};
+        const page = pages[String(result.pageid)] || Object.values(pages)[0];
+        const text = normalizeArticleText(page && page.extract ? page.extract : "");
+        if (!text) throw new Error("empty extract");
+
+        return {
+          title: page.title || result.title,
+          text,
+          source: result.sourceLabel,
+          url: page.fullurl || result.url,
+          memo: ""
+        };
+      }
+
+      async function fetchGutendexArticle(result) {
+        const textUrl = findGutendexTextUrl(result.book);
+        if (!textUrl) throw new Error("text url not found");
+
+        const response = await fetchWithTimeout(textUrl);
+        if (!response.ok) throw new Error(`Gutendex text error ${response.status}`);
+        const raw = await response.text();
+        const text = prepareGutenbergText(raw);
+        if (!text) throw new Error("empty text");
+
+        return {
+          title: result.title,
+          text,
+          source: result.sourceLabel,
+          url: result.book && result.book.gutenberg_id
+            ? `https://www.gutenberg.org/ebooks/${result.book.gutenberg_id}`
+            : textUrl,
+          memo: result.description || ""
+        };
+      }
+
+      async function handleManualAdd() {
+        const title = els.manualTitle.value.trim();
+        const text = normalizeArticleText(els.manualText.value);
+        const source = els.manualSource.value.trim() || "手動貼り付け";
+        const url = els.manualUrl.value.trim();
+
+        if (!title || !text) {
+          setStatus(els.manualStatus, "タイトルと本文を入力してください", true);
+          return;
+        }
+
+        try {
+          const article = makeArticle({ title, text, source, url, memo: "" });
+          await putRecord("articles", article);
+          els.manualForm.reset();
+          setStatus(els.manualStatus, "本棚に追加しました", false);
+          await renderShelf();
+          switchTab("shelf");
+        } catch (error) {
+          setStatus(els.manualStatus, "保存に失敗しました", true);
+          console.error(error);
+        }
+      }
+
+      function makeArticle({ title, text, source, url, memo }) {
+        const now = Date.now();
+        const wordCount = countWords(text);
+        return {
+          id: makeId(),
+          title: title || "Untitled",
+          text: normalizeArticleText(text),
+          source: source || "",
+          url: url || "",
+          wordCount,
+          addedAt: now,
+          updatedAt: now,
+          lastReadAt: 0,
+          favorite: false,
+          memo: memo || ""
+        };
+      }
+
+      async function renderShelf() {
+        if (!state.db) return;
+        const articles = await getAllRecords("articles");
+        const sorted = sortArticles(articles, els.sortSelect.value, els.sortDirectionSelect.value);
+        clearNode(els.shelfList);
+        setStatus(els.shelfStatus, `${articles.length}件の記事があります`, false);
+
+        if (!sorted.length) {
+          appendEmpty(els.shelfList, "まだ本棚に記事がありません。取得タブか手動貼り付けで追加できます。");
+          return;
+        }
+
+        sorted.forEach((article) => {
+          els.shelfList.append(createArticleCard(article));
+        });
+      }
+
+      function sortArticles(articles, sortKey, direction) {
+        const rows = [...articles];
+        const multiplier = direction === "asc" ? 1 : -1;
+        return rows.sort((a, b) => {
+          let result;
+          if (sortKey === "title") {
+            result = String(a.title || "").localeCompare(String(b.title || ""), "en", { sensitivity: "base" });
+          } else if (sortKey === "favorite") {
+            result = Number(Boolean(a.favorite)) - Number(Boolean(b.favorite));
+          } else {
+            result = Number(a[sortKey] || 0) - Number(b[sortKey] || 0);
+          }
+          if (result === 0) {
+            result = Number(a.addedAt || 0) - Number(b.addedAt || 0);
+          }
+          return result * multiplier;
+        });
+      }
+
+      function createArticleCard(article) {
+        const card = document.createElement("article");
+        card.className = "article-card";
+
+        const cover = document.createElement("div");
+        cover.className = "article-cover";
+        cover.setAttribute("aria-hidden", "true");
+        cover.textContent = article.favorite ? "★" : "ER";
+
+        const topline = document.createElement("div");
+        topline.className = "card-topline";
+
+        const title = document.createElement("h3");
+        title.className = "card-title";
+        title.textContent = article.title;
+
+        const favButton = document.createElement("button");
+        favButton.type = "button";
+        favButton.className = "secondary icon";
+        favButton.setAttribute("aria-label", article.favorite ? "お気に入りを外す" : "お気に入りにする");
+        favButton.textContent = article.favorite ? "★" : "☆";
+        favButton.addEventListener("click", async () => {
+          article.favorite = !article.favorite;
+          article.updatedAt = Date.now();
+          await putRecord("articles", article);
+          await renderShelf();
+        });
+
+        topline.append(title, favButton);
+
+        const main = document.createElement("div");
+        main.className = "article-main";
+
+        const meta = document.createElement("div");
+        meta.className = "meta-list";
+        [
+          article.source || "出典なし",
+          `${article.wordCount || 0}語`,
+          `追加 ${formatDate(article.addedAt)}`
+        ].forEach((text) => {
+          const span = document.createElement("span");
+          span.textContent = text;
+          meta.append(span);
+        });
+        main.append(topline, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "article-actions";
+
+        const openButton = document.createElement("button");
+        openButton.type = "button";
+        openButton.textContent = "開く";
+        openButton.addEventListener("click", () => openArticle(article.id));
+
+        const more = document.createElement("details");
+        more.className = "article-more";
+
+        const moreSummary = document.createElement("summary");
+        moreSummary.textContent = "その他";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "danger";
+        deleteButton.textContent = "削除";
+        deleteButton.addEventListener("click", async () => {
+          if (!confirm("この記事を削除しますか？")) return;
+          await deleteRecord("articles", article.id);
+          if (state.currentArticle && state.currentArticle.id === article.id) {
+            state.currentArticle = null;
+            localStorage.removeItem(LAST_ARTICLE_STORAGE);
+            showReaderEmpty();
+          }
+          await renderShelf();
+        });
+
+        actions.append(openButton);
+
+        const memoEditor = document.createElement("div");
+        memoEditor.className = "memo-editor";
+
+        const memoArea = document.createElement("textarea");
+        memoArea.value = article.memo || "";
+        memoArea.setAttribute("aria-label", "メモ");
+
+        const saveMemo = document.createElement("button");
+        saveMemo.type = "button";
+        saveMemo.textContent = "メモを保存";
+        saveMemo.addEventListener("click", async () => {
+          article.memo = memoArea.value;
+          article.updatedAt = Date.now();
+          await putRecord("articles", article);
+          await renderShelf();
+        });
+
+        memoEditor.append(memoArea, saveMemo);
+        const moreActions = document.createElement("div");
+        moreActions.className = "button-row";
+        moreActions.append(deleteButton);
+        more.append(moreSummary, memoEditor, moreActions);
+        main.append(more);
+
+        card.append(cover, main, actions);
+        return card;
+      }
+
+      async function openArticle(id) {
+        const article = await getRecord("articles", id);
+        if (!article) return;
+        article.lastReadAt = Date.now();
+        article.updatedAt = Date.now();
+        await putRecord("articles", article);
+        state.currentArticle = article;
+        localStorage.setItem(LAST_ARTICLE_STORAGE, article.id);
+        renderReader(article);
+        await renderShelf();
+        switchTab("reader");
+      }
+
+      function renderReader(article) {
+        els.readerEmpty.hidden = true;
+        els.readerShell.hidden = false;
+        els.readerTitle.textContent = article.title;
+        clearNode(els.readerMeta);
+
+        [article.source || "出典なし", `${article.wordCount || 0}語`].forEach((text) => {
+          const span = document.createElement("span");
+          span.textContent = text;
+          els.readerMeta.append(span);
+        });
+
+        if (article.url) {
+          const span = document.createElement("span");
+          span.textContent = article.url;
+          els.readerMeta.append(span);
+        }
+
+        hideArticleAnalysis();
+        renderTextWithClickableWords(article.text);
+      }
+
+      function showReaderEmpty() {
+        els.readerEmpty.hidden = false;
+        els.readerShell.hidden = true;
+        hideArticleAnalysis();
+        clearNode(els.readerText);
+      }
+
+      function renderTextWithClickableWords(text) {
+        clearNode(els.readerText);
+        const fragment = document.createDocumentFragment();
+        WORD_RE.lastIndex = 0;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = WORD_RE.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            fragment.append(document.createTextNode(text.slice(lastIndex, match.index)));
+          }
+          const word = document.createElement("span");
+          word.className = "word";
+          word.tabIndex = 0;
+          word.textContent = match[0];
+          word.dataset.index = String(match.index);
+          word.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleReaderClick({ target: word });
+            }
+          });
+          fragment.append(word);
+          lastIndex = match.index + match[0].length;
+        }
+
+        if (lastIndex < text.length) {
+          fragment.append(document.createTextNode(text.slice(lastIndex)));
+        }
+        els.readerText.append(fragment);
+      }
+
+      function hideArticleAnalysis() {
+        if (!els.analysisPanel) return;
+        els.analysisPanel.hidden = true;
+        clearNode(els.analysisList);
+        setStatus(els.analysisStatus, "", false);
+        if (els.analyzeArticleButton) {
+          els.analyzeArticleButton.disabled = false;
+          els.analyzeArticleButton.textContent = "AI全文解析";
+        }
+      }
+
+      async function handleArticleAnalysis() {
+        if (!state.currentArticle) return;
+        if (!els.analysisPanel.hidden) {
+          hideArticleAnalysis();
+          return;
+        }
+
+        els.analysisPanel.hidden = false;
+        clearNode(els.analysisList);
+        setStatus(els.analysisStatus, "AI全文解析を準備中...", false);
+        els.analyzeArticleButton.disabled = true;
+        els.analyzeArticleButton.textContent = "解析中";
+
+        const serial = ++state.analysisSerial;
+        try {
+          if (state.currentArticle.analysisData) {
+            renderArticleAnalysis(state.currentArticle.analysisData);
+            setStatus(els.analysisStatus, "保存済みの解析を表示しています", false);
+            return;
+          }
+
+          const analysisData = await fetchArticleAnalysis(state.currentArticle);
+          if (serial !== state.analysisSerial) return;
+          state.currentArticle.analysisData = analysisData;
+          await putRecord("articles", state.currentArticle);
+          renderArticleAnalysis(analysisData);
+          setStatus(els.analysisStatus, "解析しました", false);
+        } catch (error) {
+          if (serial !== state.analysisSerial) return;
+          setStatus(els.analysisStatus, formatAIFailure(error), true);
+          appendEmpty(els.analysisList, "AI全文解析を取得できませんでした");
+          console.error(error);
+        } finally {
+          if (serial === state.analysisSerial) {
+            els.analyzeArticleButton.disabled = false;
+            els.analyzeArticleButton.textContent = "解析を閉じる";
+          }
+        }
+      }
+
+      async function fetchArticleAnalysis(article) {
+        const prompt = buildArticleAnalysisPrompt(article);
+        const data = await fetchPuterContent({
+          prompt,
+          timeout: 65000,
+          maxTokens: 4200,
+          onRetry: () => setStatus(els.analysisStatus, AI_RETRY_MESSAGE, false)
+        });
+        const text = extractAIText(data);
+        return normalizeArticleAnalysis(parseAIText(text), article);
+      }
+
+      function buildArticleAnalysisPrompt(article) {
+        const text = normalizeArticleText(article.text).slice(0, 7000);
+        return [
+          "あなたは高校生向けの英語構文解析の先生です。",
+          "次の英文を一文ごとに分け、各文に自然な和訳と構文解析を付けてください。",
+          "",
+          "条件:",
+          "- 出力は必ずJSONのみ",
+          "- Markdownを使わない",
+          "- 省略せず、本文中の文を順番に扱う",
+          "- 各文の和訳は自然な日本語にする",
+          "- chunksは、英文を左から右に読める順番で短いかたまりにする",
+          "- roleは S, V, O, C, M, S', V', O', C' などを使う",
+          "- labelは日本語で、例: S（主語）, V（動詞）, O（目的語）, 名詞節（O）, 形容詞句, 副詞句",
+          "- kindは subject, verb, object, complement, noun, adjective, adverbial, modifier のどれかに近いもの",
+          "- notesは重要な補足だけ最大2つ",
+          "",
+          `記事タイトル:\n${article.title || ""}`,
+          "",
+          `英文:\n${text}`,
+          "",
+          "出力形式:",
+          "{",
+          '  "sentences": [',
+          "    {",
+          '      "english": "英文1文",',
+          '      "japanese": "自然な和訳",',
+          '      "pattern": "S V O など",',
+          '      "chunks": [',
+          '        {"text": "語句", "role": "S", "label": "S（主語）", "kind": "subject"}',
+          "      ],",
+          '      "notes": ["補足1"]',
+          "    }",
+          "  ]",
+          "}"
+        ].join("\n");
+      }
+
+      function normalizeArticleAnalysis(data, article) {
+        if (data && data.rawText) return data;
+        const sentences = Array.isArray(data && data.sentences) ? data.sentences : [];
+        return {
+          title: article.title || "",
+          sentences: sentences.map((item) => ({
+            english: String(item.english || item.sentence || "").trim(),
+            japanese: String(item.japanese || item.translation || item.ja || "").trim(),
+            pattern: String(item.pattern || item.structure || "").trim(),
+            chunks: Array.isArray(item.chunks) ? item.chunks.map(normalizeAnalysisChunk).filter((chunk) => chunk.text) : [],
+            notes: Array.isArray(item.notes) ? item.notes.map((note) => String(note || "").trim()).filter(Boolean).slice(0, 2) : []
+          })).filter((item) => item.english || item.japanese || item.chunks.length)
+        };
+      }
+
+      function normalizeAnalysisChunk(chunk) {
+        return {
+          text: String(chunk && (chunk.text || chunk.phrase || chunk.words) || "").trim(),
+          role: String(chunk && chunk.role || "").trim(),
+          label: String(chunk && (chunk.label || chunk.name) || "").trim(),
+          kind: normalizeAnalysisKind(chunk && chunk.kind || chunk && chunk.type || chunk && chunk.role)
+        };
+      }
+
+      function normalizeAnalysisKind(value) {
+        const text = String(value || "").toLowerCase();
+        if (/subject|^s'?$/i.test(text)) return "subject";
+        if (/verb|^v'?$/i.test(text)) return "verb";
+        if (/object|^o'?$/i.test(text)) return "object";
+        if (/complement|^c'?$/i.test(text)) return "complement";
+        if (/noun|名詞/.test(text)) return "noun";
+        if (/adjective|形容/.test(text)) return "adjective";
+        if (/adverb|副詞/.test(text)) return "adverbial";
+        return "modifier";
+      }
+
+      function renderArticleAnalysis(data) {
+        clearNode(els.analysisList);
+        if (data && data.rawText) {
+          appendAnalysisRaw(data.rawText);
+          return;
+        }
+
+        const sentences = Array.isArray(data && data.sentences) ? data.sentences : [];
+        if (!sentences.length) {
+          appendEmpty(els.analysisList, "解析結果がありません");
+          return;
+        }
+
+        sentences.forEach((sentence, index) => {
+          els.analysisList.append(createAnalysisCard(sentence, index));
+        });
+      }
+
+      function appendAnalysisRaw(text) {
+        const card = document.createElement("article");
+        card.className = "analysis-card";
+        const paragraph = document.createElement("p");
+        paragraph.className = "analysis-translation";
+        paragraph.textContent = text;
+        card.append(paragraph);
+        els.analysisList.append(card);
+      }
+
+      function createAnalysisCard(sentence, index) {
+        const card = document.createElement("article");
+        card.className = "analysis-card";
+
+        const english = document.createElement("p");
+        english.className = "analysis-sentence";
+        english.textContent = sentence.english || `Sentence ${index + 1}`;
+        card.append(english);
+
+        const japanese = document.createElement("p");
+        japanese.className = "analysis-translation";
+        japanese.textContent = sentence.japanese || "和訳を取得できませんでした";
+        card.append(japanese);
+
+        if (sentence.pattern) {
+          const pattern = document.createElement("div");
+          pattern.className = "analysis-pattern";
+          const label = document.createElement("span");
+          label.textContent = "型";
+          const chip = document.createElement("span");
+          chip.className = "pattern-chip";
+          chip.textContent = sentence.pattern;
+          pattern.append(label, chip);
+          card.append(pattern);
+        }
+
+        const flow = document.createElement("div");
+        flow.className = "structure-flow";
+        const chunks = Array.isArray(sentence.chunks) ? sentence.chunks : [];
+        chunks.forEach((chunk) => flow.append(createStructureChip(chunk)));
+        if (chunks.length) card.append(flow);
+
+        if (Array.isArray(sentence.notes) && sentence.notes.length) {
+          const notes = document.createElement("ul");
+          notes.className = "analysis-notes";
+          sentence.notes.forEach((note) => {
+            const li = document.createElement("li");
+            li.textContent = note;
+            notes.append(li);
+          });
+          card.append(notes);
+        }
+
+        return card;
+      }
+
+      function createStructureChip(chunk) {
+        const chip = document.createElement("div");
+        chip.className = "structure-chip";
+        chip.dataset.kind = chunk.kind || "modifier";
+
+        const text = document.createElement("div");
+        text.className = "structure-text";
+        text.textContent = chunk.text || "";
+
+        const label = document.createElement("div");
+        label.className = "structure-label";
+        label.textContent = [chunk.role, chunk.label].filter(Boolean).join(" / ") || "修飾";
+
+        chip.append(text, label);
+        return chip;
+      }
+
+      async function handleReaderClick(event) {
+        const target = event.target.closest ? event.target.closest(".word") : null;
+        if (!target || !state.currentArticle) return;
+
+        const word = target.textContent || "";
+        const normalizedWord = normalizeWord(word);
+        if (!normalizedWord) return;
+
+        const index = Number(target.dataset.index || 0);
+        const context = getSentenceContext(state.currentArticle.text, index);
+        const lookup = {
+          word,
+          normalizedWord,
+          sentence: context.sentence,
+          beforeSentence: context.beforeSentence,
+          afterSentence: context.afterSentence,
+          articleTitle: state.currentArticle.title,
+          cacheKey: makeWordCacheKey(normalizedWord, context.sentence)
+        };
+
+        await lookupWord(lookup, { force: false });
+      }
+
+      function makeWordCacheKey(normalizedWord, sentence) {
+        return `${WORD_CACHE_VERSION}::${normalizedWord}::${sentence}`;
+      }
+
+      async function lookupWord(lookup, { force }) {
+        state.currentLookup = lookup;
+        const serial = ++state.lookupSerial;
+        openDictionary(lookup);
+
+        if (!force) {
+          try {
+            const cached = await getRecord("wordCache", lookup.cacheKey);
+            if (cached) {
+              displayCachedLookup(cached);
+              return;
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        }
+
+        const cache = {
+          key: lookup.cacheKey,
+          word: lookup.word,
+          normalizedWord: lookup.normalizedWord,
+          sentence: lookup.sentence,
+          dictData: null,
+          myMemoryData: null,
+          aiData: null,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+
+        const dictJob = fetchDictionary(lookup.normalizedWord)
+          .then(async (dictData) => {
+            if (!isActiveLookup(serial)) return;
+            cache.dictData = dictData;
+            cache.updatedAt = Date.now();
+            displayDictionaryData(dictData);
+            applyAIExampleFallback(cache.aiData, dictData);
+
+            if (dictData.definition) {
+              try {
+                const myMemoryData = await fetchMyMemory(dictData.definition);
+                if (!isActiveLookup(serial)) return;
+                cache.myMemoryData = myMemoryData;
+                cache.updatedAt = Date.now();
+                displayMyMemoryData(myMemoryData);
+              } catch (error) {
+                if (!isActiveLookup(serial)) return;
+                cache.myMemoryData = { error: "日本語説明を取得できませんでした" };
+                displayText(els.dictJapanese, "日本語説明を取得できませんでした");
+                console.error(error);
+              }
+            } else {
+              displayText(els.dictJapanese, "日本語説明を取得できませんでした");
+            }
+          })
+          .catch((error) => {
+            if (!isActiveLookup(serial)) return;
+            cache.dictData = { error: "英英辞書を取得できませんでした" };
+            displayDictionaryError();
+            console.error(error);
+          });
+
+        const aiJob = fetchPuterAI(lookup, {
+          onRetry: () => {
+            if (!isActiveLookup(serial)) return;
+            displayAIError(AI_RETRY_MESSAGE);
+          }
+        })
+          .then((aiData) => {
+            if (!isActiveLookup(serial)) return;
+            cache.aiData = aiData;
+            cache.updatedAt = Date.now();
+            displayAIData(aiData);
+            applyAIExampleFallback(aiData, cache.dictData);
+          })
+          .catch((error) => {
+            if (!isActiveLookup(serial)) return;
+            const message = formatAIFailure(error);
+            cache.aiData = { error: message };
+            displayAIError(message);
+            console.error(error);
+          });
+
+        await Promise.allSettled([dictJob, aiJob]);
+        if (isActiveLookup(serial)) {
+          try {
+            await putRecord("wordCache", cache);
+            await refreshCacheInfo();
+          } catch (error) {
+            console.error(error);
+          }
+        }
+      }
+
+      function isActiveLookup(serial) {
+        return serial === state.lookupSerial && !els.dictOverlay.classList.contains("hidden");
+      }
+
+      function openDictionary(lookup) {
+        els.dictOverlay.classList.remove("hidden");
+        els.dictOverlay.setAttribute("aria-hidden", "false");
+        displayText(els.dictWord, lookup.word);
+        resetDictionaryFields();
+        displayText(els.sentenceOriginalValue, lookup.sentence || "英文を取得できませんでした");
+        els.closeDictButton.focus();
+      }
+
+      function closeDictionary() {
+        els.dictOverlay.classList.add("hidden");
+        els.dictOverlay.setAttribute("aria-hidden", "true");
+      }
+
+      function resetDictionaryFields() {
+        displayText(els.dictPartOfSpeech, "読み込み中...");
+        displayText(els.dictDefinition, "読み込み中...");
+        displayText(els.dictJapanese, "読み込み中...");
+        displayText(els.dictExample, "読み込み中...");
+        displayText(els.aiMeaning, "読み込み中...");
+        displayText(els.sentenceOriginalValue, "読み込み中...");
+        displayText(els.sentenceTranslationValue, "読み込み中...");
+        displayText(els.aiCore, "読み込み中...");
+        clearNode(els.aiExtensions);
+        const li = document.createElement("li");
+        li.textContent = "読み込み中...";
+        els.aiExtensions.append(li);
+      }
+
+      function displayCachedLookup(cache) {
+        if (cache.dictData && !cache.dictData.error) {
+          displayDictionaryData(cache.dictData);
+        } else {
+          displayDictionaryError();
+        }
+
+        if (cache.myMemoryData && !cache.myMemoryData.error) {
+          displayMyMemoryData(cache.myMemoryData);
+        } else {
+          displayText(els.dictJapanese, cache.myMemoryData && cache.myMemoryData.error
+            ? cache.myMemoryData.error
+            : "日本語説明を取得できませんでした");
+        }
+
+        const cachedAIData = cache.aiData;
+        if (cachedAIData && !cachedAIData.error) {
+          displayAIData(cachedAIData);
+          applyAIExampleFallback(cachedAIData, cache.dictData);
+        } else {
+          displayAIError(cachedAIData && cachedAIData.error
+            ? cachedAIData.error
+            : "AI補助を取得できませんでした");
+        }
+      }
+
+      async function fetchDictionary(word) {
+        const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`;
+        const data = await fetchJson(url);
+        if (!Array.isArray(data) || !data.length) throw new Error("dictionary empty");
+        return parseDictionaryEntry(data[0]);
+      }
+
+      function parseDictionaryEntry(entry) {
+        const meaning = Array.isArray(entry.meanings) && entry.meanings.length ? entry.meanings[0] : {};
+        const definition = Array.isArray(meaning.definitions) && meaning.definitions.length ? meaning.definitions[0] : {};
+
+        return {
+          word: entry.word || "",
+          partOfSpeech: meaning.partOfSpeech || "",
+          definition: definition.definition || "",
+          example: definition.example || "",
+          synonyms: Array.isArray(definition.synonyms) ? definition.synonyms.slice(0, 6) : []
+        };
+      }
+
+      function displayDictionaryData(data) {
+        displayText(els.dictPartOfSpeech, data.partOfSpeech || "品詞情報はありません");
+        displayText(els.dictDefinition, data.definition || "英英辞書を取得できませんでした");
+        displayText(els.dictExample, data.example || "例文はありません");
+      }
+
+      function displayDictionaryError() {
+        displayText(els.dictPartOfSpeech, "品詞情報はありません");
+        displayText(els.dictDefinition, "英英辞書を取得できませんでした");
+        displayText(els.dictExample, "例文はありません");
+        displayText(els.dictJapanese, "日本語説明を取得できませんでした");
+      }
+
+      function applyAIExampleFallback(aiData, dictData) {
+        if (!aiData || aiData.error || dictData && dictData.example) return;
+        const example = getAIExampleSentence(aiData);
+        if (example) displayText(els.dictExample, example);
+      }
+
+      function getAIExampleSentence(data) {
+        return data.exampleSentence ||
+          data.example ||
+          data.englishExample ||
+          data.aiExample ||
+          data.sampleSentence ||
+          "";
+      }
+
+      async function fetchMyMemory(definition) {
+        const shortDefinition = String(definition).slice(0, 450);
+        const url = new URL("https://api.mymemory.translated.net/get");
+        url.searchParams.set("q", shortDefinition);
+        url.searchParams.set("langpair", "en|ja");
+        const data = await fetchJson(url.toString());
+        const translated = data && data.responseData ? data.responseData.translatedText : "";
+        if (!translated) throw new Error("mymemory empty");
+        return {
+          translatedText: translated,
+          sourceDefinition: shortDefinition
+        };
+      }
+
+      function displayMyMemoryData(data) {
+        displayText(els.dictJapanese, data.translatedText || "日本語説明を取得できませんでした");
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function withTimeout(promise, timeout) {
+        let timer = null;
+        const timeoutPromise = new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            const error = new Error("ai-timeout");
+            error.name = "TimeoutError";
+            reject(error);
+          }, timeout);
+        });
+        return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+      }
+
+      function isPuterReady() {
+        return Boolean(window.puter && window.puter.ai && typeof window.puter.ai.chat === "function");
+      }
+
+      function loadPuterSDK() {
+        if (isPuterReady()) return Promise.resolve();
+        if (state.puterLoadPromise) return state.puterLoadPromise;
+
+        state.puterLoadPromise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          const timeout = setTimeout(() => {
+            reject(new Error("Puter SDK load timeout"));
+          }, 15000);
+
+          script.src = PUTER_SCRIPT_URL;
+          script.async = true;
+          script.onload = () => {
+            clearTimeout(timeout);
+            if (isPuterReady()) {
+              resolve();
+            } else {
+              reject(new Error("Puter SDK loaded without AI support"));
+            }
+          };
+          script.onerror = () => {
+            clearTimeout(timeout);
+            reject(new Error("Puter SDK failed to load"));
+          };
+
+          document.head.append(script);
+        }).catch((error) => {
+          state.puterLoadPromise = null;
+          throw error;
+        });
+
+        return state.puterLoadPromise;
+      }
+
+      function isRetryableAIError(error) {
+        const message = String(error && error.message ? error.message : error || "").toLowerCase();
+        if (/quota|limit|billing|credit|exhausted|permission|denied|unauthorized|forbidden|sign.?in|login/.test(message)) {
+          return false;
+        }
+        return error && (error.name === "TimeoutError" || error instanceof TypeError || /network|timeout|temporary|unavailable|busy/.test(message));
+      }
+
+      function formatAIFailure(error) {
+        const message = String(error && error.message ? error.message : error || "");
+        const lower = message.toLowerCase();
+        if (!isPuterReady()) return "AI補助を読み込めませんでした。ネットワーク接続を確認してください";
+        if (/sign.?in|login/.test(lower)) return "Puterへのログインが必要です";
+        if (/quota|limit|billing|credit|exhausted/.test(lower)) return "AI補助の利用上限に達しました";
+        if (error && error.name === "TimeoutError") return "AI補助の取得がタイムアウトしました";
+        return "AI補助を取得できませんでした";
+      }
+
+      async function fetchPuterContent({ prompt, timeout, maxTokens = 700, onRetry }) {
+        await loadPuterSDK();
+        if (!isPuterReady()) throw new Error("Puter AI is unavailable");
+
+        let lastError = null;
+        for (let attempt = 0; attempt <= AI_MAX_RETRIES; attempt += 1) {
+          try {
+            return await withTimeout(window.puter.ai.chat(prompt, {
+              temperature: 0.2,
+              max_tokens: maxTokens
+            }), timeout);
+          } catch (error) {
+            lastError = error;
+            if (attempt >= AI_MAX_RETRIES || !isRetryableAIError(error)) {
+              throw error;
+            }
+            if (typeof onRetry === "function") onRetry(attempt + 1, AI_MAX_RETRIES, error);
+            await wait(800 * (attempt + 1));
+          }
+        }
+        throw lastError;
+      }
+
+      async function fetchPuterAI(lookup, options = {}) {
+        const prompt = buildAIPrompt(lookup);
+        const data = await fetchPuterContent({
+          prompt,
+          timeout: 45000,
+          onRetry: options.onRetry
+        });
+        const text = extractAIText(data);
+        return parseAIText(text);
+      }
+
+      function buildAIPrompt(lookup) {
+        return [
+          "あなたは高校生向けの英語辞書補助です。",
+          "次の英単語について、本文中での意味とコアイメージを日本語で簡潔に説明してください。",
+          "",
+          "条件:",
+          "- 記事全体の要約はしない",
+          "- 文脈中のこの単語の意味だけ説明する",
+          "- 全文翻訳はしない",
+          "- 押された単語を含む一文だけ自然な日本語に訳す",
+          "- 辞書の例文が無い場合の保険として、この単語を自然に使った短い英語例文を1つ作る",
+          "- 文法解析はしない",
+          "- 難しい専門用語を避ける",
+          "- 1項目を短めにする",
+          "- 出力は必ずJSONのみ",
+          "- Markdownを使わない",
+          "- 余計な前置きや説明を入れない",
+          "",
+          `単語:\n${lookup.word}`,
+          "",
+          `本文中の文:\n${lookup.sentence}`,
+          "",
+          `前の文:\n${lookup.beforeSentence || ""}`,
+          "",
+          `次の文:\n${lookup.afterSentence || ""}`,
+          "",
+          `記事タイトル:\n${lookup.articleTitle || ""}`,
+          "",
+          "出力形式:",
+          "{",
+          '  "contextMeaning": "この文での意味",',
+          '  "sentenceJapanese": "押された単語を含む一文の自然な和訳",',
+          '  "exampleSentence": "この単語を自然に使った短い英語例文",',
+          '  "coreImage": "コアイメージ",',
+          '  "extensions": ["意味の広がり1", "意味の広がり2", "意味の広がり3", "意味の広がり4"]',
+          "}"
+        ].join("\n");
+      }
+
+      function extractAIText(data) {
+        if (typeof data === "string") return data.trim();
+        if (data && typeof data.text === "string") return data.text.trim();
+        if (data && data.message && typeof data.message.text === "string") return data.message.text.trim();
+
+        const content = data && data.message && data.message.content !== undefined
+          ? data.message.content
+          : data && data.content;
+        if (typeof content === "string") return content.trim();
+        if (Array.isArray(content)) {
+          const text = content.map((part) => {
+            if (typeof part === "string") return part;
+            if (part && typeof part.text === "string") return part.text;
+            if (part && typeof part.content === "string") return part.content;
+            return "";
+          }).join("\n").trim();
+          if (text) return text;
+        }
+
+        const text = String(data || "").trim();
+        if (text && text !== "[object Object]") return text;
+        throw new Error("AI response was empty");
+      }
+
+      function parseAIText(text) {
+        const cleaned = String(text || "")
+          .replace(/^```(?:json)?/i, "")
+          .replace(/```$/i, "")
+          .trim();
+        try {
+          return JSON.parse(cleaned);
+        } catch (firstError) {
+          const start = cleaned.indexOf("{");
+          const end = cleaned.lastIndexOf("}");
+          if (start >= 0 && end > start) {
+            try {
+              return JSON.parse(cleaned.slice(start, end + 1));
+            } catch (secondError) {
+              return { rawText: cleaned };
+            }
+          }
+          return { rawText: cleaned };
+        }
+      }
+
+      function displayAIData(data) {
+        if (data.rawText) {
+          displayText(els.aiMeaning, data.rawText);
+          displayText(els.sentenceTranslationValue, "AI応答を一文和訳として分けられませんでした");
+          displayText(els.aiCore, "AI応答を項目に分けられませんでした");
+          renderAIExtensions([]);
+          return;
+        }
+
+        displayText(els.aiMeaning, data.contextMeaning || "取得できませんでした");
+        displayText(els.sentenceTranslationValue, getSentenceTranslation(data) || "取得できませんでした");
+        displayText(els.aiCore, data.coreImage || "取得できませんでした");
+        renderAIExtensions(Array.isArray(data.extensions) ? data.extensions : []);
+      }
+
+      function getSentenceTranslation(data) {
+        return data.sentenceJapanese ||
+          data.sentenceTranslation ||
+          data.japaneseSentence ||
+          data.naturalJapanese ||
+          "";
+      }
+
+      function displayAIError(message) {
+        displayText(els.aiMeaning, message);
+        displayText(els.sentenceTranslationValue, message);
+        displayText(els.aiCore, message);
+        renderAIExtensions([message]);
+      }
+
+      function renderAIExtensions(items) {
+        clearNode(els.aiExtensions);
+        const rows = items.length ? items : ["取得できませんでした"];
+        rows.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          els.aiExtensions.append(li);
+        });
+      }
+
+      async function fetchJson(url, options) {
+        const response = await fetchWithTimeout(url, options);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }
+
+      function fetchWithTimeout(url, options = {}, timeout = 20000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+        const merged = { ...options, signal: controller.signal };
+        return fetch(url, merged).finally(() => clearTimeout(timer));
+      }
+
+      function findGutendexTextUrl(book) {
+        if (!book || !book.formats) return "";
+        const entries = Object.entries(book.formats);
+        const preferred = entries.find(([type, url]) => type.startsWith("text/plain") && url);
+        if (!preferred) return "";
+        return String(preferred[1]).replace(/^http:/, "https:");
+      }
+
+      function prepareGutenbergText(raw) {
+        let text = normalizeArticleText(raw);
+        const startMatch = text.match(/\*\*\*\s*START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[\s\S]*?\*\*\*/i);
+        if (startMatch && typeof startMatch.index === "number") {
+          text = text.slice(startMatch.index + startMatch[0].length);
+        }
+        const endMatch = text.match(/\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i);
+        if (endMatch && typeof endMatch.index === "number") {
+          text = text.slice(0, endMatch.index);
+        }
+        return normalizeArticleText(text);
+      }
+
+      function normalizeArticleText(text) {
+        return String(text || "")
+          .replace(/\r\n?/g, "\n")
+          .replace(/\t/g, " ")
+          .replace(/\n{4,}/g, "\n\n\n")
+          .trim();
+      }
+
+      function normalizeWord(word) {
+        return String(word || "")
+          .replace(/[’]/g, "'")
+          .toLowerCase()
+          .replace(/^[^a-z]+|[^a-z]+$/g, "");
+      }
+
+      function countWords(text) {
+        const matches = String(text || "").match(/[A-Za-z]+(?:['’][A-Za-z]+)*(?:-[A-Za-z]+(?:['’][A-Za-z]+)*)*/g);
+        return matches ? matches.length : 0;
+      }
+
+      function getSentenceContext(text, index) {
+        const current = sentenceAt(text, index);
+        const before = current.start > 1 ? sentenceAt(text, current.start - 2) : { sentence: "" };
+        const after = current.end < text.length - 1 ? sentenceAt(text, current.end + 1) : { sentence: "" };
+        return {
+          sentence: current.sentence,
+          beforeSentence: before.sentence,
+          afterSentence: after.sentence
+        };
+      }
+
+      function sentenceAt(text, index) {
+        const value = String(text || "");
+        const bounded = Math.min(Math.max(0, index), Math.max(0, value.length - 1));
+        let start = bounded;
+        while (start > 0 && !/[.!?\n]/.test(value[start - 1])) start -= 1;
+        while (start < value.length && /\s/.test(value[start])) start += 1;
+
+        let end = bounded;
+        while (end < value.length && !/[.!?\n]/.test(value[end])) end += 1;
+        if (end < value.length) end += 1;
+
+        return {
+          start,
+          end,
+          sentence: value.slice(start, end).replace(/\s+/g, " ").trim()
+        };
+      }
+
+      function stripHtmlToText(html) {
+        const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+        return (doc.body.textContent || "").trim();
+      }
+
+      function makeId() {
+        if (crypto && typeof crypto.randomUUID === "function") {
+          return crypto.randomUUID();
+        }
+        return `article-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+
+      function formatDate(timestamp) {
+        if (!timestamp) return "未読";
+        return new Intl.DateTimeFormat("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(new Date(timestamp));
+      }
+
+      function setStatus(element, message, isError) {
+        element.textContent = message || "";
+        element.classList.toggle("error", Boolean(isError));
+      }
+
+      function displayText(element, text) {
+        element.textContent = text || "";
+      }
+
+      function clearNode(node) {
+        while (node.firstChild) node.removeChild(node.firstChild);
+      }
+
+      function appendEmpty(parent, message) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = message;
+        parent.append(empty);
+      }
+    })();
+  </script>
+</body>
+</html>
