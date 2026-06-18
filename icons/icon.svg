@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="English Reading Shelf">
+  <rect width="512" height="512" rx="96" fill="#146c67"/>
+  <path d="M118 138h122c28 0 50 8 66 24 16-16 38-24 66-24h22v236h-22c-34 0-55 8-66 25-11-17-32-25-66-25H118V138Z" fill="#231f12" opacity=".16"/>
+  <path d="M132 126h112c30 0 51 9 62 28 11-19 32-28 62-28h12v218h-12c-34 0-56 8-67 25-11-17-33-25-67-25H132V126Z" fill="#f6f8f7"/>
+  <path d="M168 184h86M168 230h94M168 276h70M350 184h-86M350 230h-94M350 276h-70" stroke="#c7664b" stroke-width="18" stroke-linecap="round"/>
+  <path d="M306 154v215" stroke="#231f12" stroke-width="16" stroke-linecap="round"/>
+</svg>
